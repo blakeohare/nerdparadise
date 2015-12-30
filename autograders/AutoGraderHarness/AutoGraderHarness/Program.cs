@@ -9,6 +9,10 @@ namespace AutoGraderHarness
 	{
 		static void Main(string[] args)
 		{
+			HttpRequest request = new HttpRequest("GET", "http://nerdparadise.com", null);
+			request.Send();
+			string response = request.ResponseBody;
+			int responsecode = request.ResponseCode;
 		}
 	}
 }
