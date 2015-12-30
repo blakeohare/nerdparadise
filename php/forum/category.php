@@ -24,22 +24,55 @@
 			'<a href="/forum/'.$category_key.'/post">Create new thread</a>',
 			'</div>',
 			
-			'<table border="1">'
+			'<div style="background-color:#999;">'
 			);
 		
 		$thread_ids = $threads['thread_order'];
 		if (count($thread_ids) > 0) {
+			$i = 0;
 			foreach ($thread_ids as $thread_id) {
 				$thread_info = $threads['thread_'.$thread_id];
-				array_push($output, '<tr>');
-				array_push($output, '<td>'.htmlspecialchars($thread_info['title']).'</td>');
-				array_push($output, '</tr>');
+				$last_post_info = $threads['post_'.$thread_info['last_post_id']];
+				$last_post_user_info = $threads['user_'.$last_post_info['user_id']];
+				
+				$row = implode("", array(
+				
+					'<div style="margin:1px; background-color:#'.($i % 2 == 0 ? 'eee' : 'fff').'">',
+						
+						'<div style="width:600px; float:left;">',
+							'<a href="/forum/'.$category_key.'/'.$thread_info['thread_id'].'">',
+							htmlspecialchars($thread_info['title']),
+							'</a>',
+						'</div>',
+						
+						'<div style="width:80px; float:left; text-align:center; font-size:11px;">',
+							'<div>'.($thread_info['post_count'] - 1).'</div>',
+							'<div>replies</div>',
+						'</div>',
+						
+						'<div style="width:80px; float:left; text-align:center; font-size:11px;">',
+							'<div>'.$thread_info['view_count'].'</div>',
+							'<div>views</div>',
+						'</div>',
+						
+						'<div style="width:150px; float:left;">',
+							'<a href="/profiles/'.$last_post_user_info['login_id'].'">',
+							htmlspecialchars($last_post_user_info['name']),
+							'</a>',
+						'</div>',
+					
+					'<div style="clear:left;"></div>',
+					'</div>',
+				));
+				
+				array_push($output, $row);
+				++$i;
 			}
 		} else {
 			array_push($output, '<tr><td>No posts</td></tr>');
 		}
 		
-		array_push($output, '</table>');
+		array_push($output, '</div>');
 		
 		return build_response_ok("Forum category", implode("\n", $output));
 	}

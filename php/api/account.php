@@ -271,4 +271,37 @@
 		
 		return api_success();
 	}
+	
+	function api_account_canonicalize_user_db_entry($user_info) {
+		$is_admin = false;
+		$online_now = $user_info['time_last_online'] + 10 * 60 > time();
+		
+		$flags = $user_info['flags'];
+		for ($i = 0; $i < strlen($flags); ++$i) {
+			switch ($flags[$i]) {
+				case 'A': $is_admin = true; break;
+				default: break;
+			}
+		}
+		
+		$user_info['is_admin'] = $is_admin;
+		$user_info['online_now'] = $online_now;
+		return $user_info;
+	}
+	
+	function api_account_fetch_mini_profiles($user_ids) {
+		$user_ids = sort_and_remove_duplicates($user_ids);
+		$output = array();
+		if (count($user_ids) > 0) {
+			$user_infos = sql_query("
+				SELECT
+					`user_id`,`login_id`,`name`,`flags`,`image_id`,`time_last_online`,`post_count`
+				FROM `users`
+				WHERE `user_id` IN (".implode(', ', $user_ids).")");
+			foreach ($user_infos as $user_info) {
+				$output['user_'.$user_info['user_id']] = api_account_canonicalize_user_db_entry($user_info);
+			}
+		}
+		return $output;
+	}
 ?>

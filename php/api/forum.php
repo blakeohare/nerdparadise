@@ -202,6 +202,25 @@
 		return $thread_info['thread_id'];
 	}
 	
+	function api_forum_canonicalize_thread_db_entry($thread) {
+		$flags = $thread['flags'];
+		$is_sticky = false;
+		$is_locked = false;
+		$has_poll = false;
+		for ($i = 0; $i < strlen($flags); ++$i) {
+			switch ($flags[$i]) {
+				case 'S': $is_sticky = true; break;
+				case 'L': $is_locked = true; break;
+				case 'P': $has_poll = true; break;
+			}
+		}
+		$thread['is_sticky'] = $is_sticky;
+		$thread['is_locked'] = $is_locked;
+		$thread['has_poll'] = $has_poll;
+		
+		return $thread;
+	}
+	
 	function api_forum_canonicalize_category_db_entry($category) {
 		$is_admin_visible = false;
 		$is_front_page = false;
@@ -248,7 +267,7 @@
 			$thread_ids = array();
 			$user_ids = array();
 			for ($i = 0; $i < $posts->num_rows; ++$i) {
-				$post = api_forum_canonicalize_post_db_entry($post->fetch_assoc());
+				$post = api_forum_canonicalize_post_db_entry($posts->fetch_assoc());
 				$post_infos['post_'.$post['post_id']] = $post;
 				array_push($thread_ids, $post['thread_id']);
 				array_push($user_ids, $post['user_id']);
@@ -259,7 +278,10 @@
 			}
 			
 			if ($fetch_user_info_too) {
-				// TODO: this as well with user_ prefix
+				$user_infos = api_account_fetch_mini_profiles($user_ids);
+				foreach ($user_infos as $key => $value) {
+					$post_infos[$key] = $value;
+				}
 			}
 		}
 		return $post_infos;
@@ -283,7 +305,7 @@
 			
 			$post_ids = array();
 			$user_ids = array();
-			$threads = array();
+			
 			for ($i = 0; $i < $threads->num_rows; ++$i) {
 				$thread = api_forum_canonicalize_thread_db_entry($threads->fetch_assoc());
 				array_push($post_ids, intval($thread['last_post_id']));
@@ -292,11 +314,13 @@
 				$output['thread_'.$thread['thread_id']] = $thread;
 			}
 			$post_infos = api_forum_get_posts($post_ids, false, true);
-			
 			$output = array_merge($post_infos, $output);
 		}
 		
 		$output['thread_order'] = $thread_order;
+		
 		return $output;
 	}
+	
+	
 ?>
