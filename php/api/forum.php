@@ -48,6 +48,9 @@
 			
 			if ($thread_id == 0) {
 				// new thread
+				$thread_title = trim($thread_title_if_new);
+				if (strlen($thread_title) == 0) return api_error("THREAD_TITLE_BLANK");
+				
 				$post = api_forum_create_post_impl($user_id, $is_admin, $cateogry_id, 0, $content);
 			} else {
 				// reply to thread
@@ -74,14 +77,14 @@
 					'user_id_cluster' => api_forum_encode_user_id_cluster($message_user_ids),
 					'thread_id' => $thread_info['thread_id']));
 			} else {
-				$thread_info = api_forum_create_new_thread($category_id, $thread_title_if_new, $post['post_id'], 1);
+				$thread_info = api_forum_create_new_thread($user_id, $is_admin, $category_id, $thread_title_if_new, $post['post_id'], 1);
 				if ($thread_info['ERROR']) {
 					api_forum_delete_posts(array($post['post_id']));
 					return $thread_info;
 				}
 			}
 			
-			sql_update("UPDATE `forum_posts` SET `thread_id` = ".$thread_info['thread_id']." WHERE `post_id` = ".$post['post_id']." LIMIT 1");
+			sql_query("UPDATE `forum_posts` SET `thread_id` = ".$thread_info['thread_id']." WHERE `post_id` = ".$post['post_id']." LIMIT 1");
 		}
 		
 		return api_success(array(
@@ -108,11 +111,21 @@
 				sql_query("UPDATE `forum_categories` SET `post_count` = `post_count` + 1 WHERE `category_id` = $category_id LIMIT 1");
 			}
 		}
+		
+		return api_success(array(
+			'post_id' => $post_id,
+			'thread_id' => $thread_id,
+			));
 	}
 	
-	function api_forum_get_category_info($user_id, $is_admin, $category_id, $for_posting) {
-		$category_id = intval($category_id);
-		$category_info = sql_query_item("SELECT * FROM `forum_category` WHERE `category_id` = $category_id LIMIT 1");
+	function api_forum_get_category_info($user_id, $is_admin, $category_id_or_key, $for_posting) {
+		$category_id = intval($category_id_or_key);
+		if ($category_id == 0) {
+			$category_key = string_alphanums(strtolower($category_id_or_key));
+			$category_info = sql_query_item("SELECT * FROM `forum_categories` WHERE `key` = '".sql_sanitize_string($category_key)."' LIMIT 1");
+		} else {
+			$category_info = sql_query_item("SELECT * FROM `forum_categories` WHERE `category_id` = $category_id LIMIT 1");
+		}
 		
 		$is_admin_visible = false;
 		$flags = $category_info['flags'];
@@ -148,7 +161,8 @@
 			'post_count' => $post_count));
 		
 		if ($category_info != null) {
-			$last_post_id = ($category_info['last_post_id'] < $post_id) ? $post_id : $category_info['last_post_id'];
+			$last_post_id = intval($category_info['last_post_id']);
+			if ($post_id > $last_post_id) $last_post_id = $post_id;
 			sql_query("
 				UPDATE `forum_categories`
 				SET
@@ -159,6 +173,11 @@
 					`category_id` = $category_id
 				LIMIT 1");
 		}
+		
+		return api_success(array(
+			'thread_id' => $thread_id,
+			'category_id' => $category_id,
+			));
 	}
 	
 	function api_forum_encode_user_id_cluster($user_ids) {

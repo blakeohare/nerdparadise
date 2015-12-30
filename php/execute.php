@@ -31,13 +31,22 @@
 					case 'tutorials': return 'not_found.php';
 					case 'forum': 
 						if ($length == 1) {
+							// /forum
 							return 'forum/main.php';
 						} else if ($length == 2) {
+							// /forum/{category}
 							return 'forum/category.php';
 						} else if ($length == 3) {
 							$thread_id = intval($parts[2]);
 							if ($thread_id > 0) {
+								// /forum/{category}/{thread}
 								return 'forum/thread.php';
+							} else if (substr($parts[2], 0, strlen('page')) == 'page') {
+								// /forum/{category}/page{pagenum}
+								return 'forum/category.php';
+							} else if($parts[2] == 'post') {
+								// /forum/{category}/post
+								return 'forum/post.php';
 							}
 						}
 						break;
