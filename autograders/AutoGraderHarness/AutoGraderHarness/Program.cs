@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AutoGraderHarness.Graders;
 
 namespace AutoGraderHarness
 {
@@ -9,10 +10,19 @@ namespace AutoGraderHarness
 	{
 		static void Main(string[] args)
 		{
-			HttpRequest request = new HttpRequest("GET", "http://nerdparadise.com", null);
-			request.Send();
-			string response = request.ResponseBody;
-			int responsecode = request.ResponseCode;
+			CrayonGrader grader = new CrayonGrader(string.Join("\n", new string[] {
+				"$print('Hello, World!');",
+				"for (i = 0; i < 10; ++i) {",
+				"  $print(i +  ' Mississippi');",
+				"}",
+				"$assert(false, 'keke');",
+			}));
+
+			grader.SetUp();
+			if (grader.State == GraderState.SETTING_UP)
+			{
+				string output = grader.Run();
+			}
 		}
 	}
 }

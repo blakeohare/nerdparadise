@@ -43,11 +43,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandLineProcess.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="GraderState.cs" />
+    <Compile Include="Graders\AbstractGrader.cs" />
+    <Compile Include="Graders\CrayonGrader.cs" />
     <Compile Include="HttpRequest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RunnerProcess.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
