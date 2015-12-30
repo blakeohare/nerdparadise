@@ -206,4 +206,33 @@
 		return implode("\n", $output);
 	}
 	
+	function int_to_base64($value) {
+		$value = intval($value);
+		if ($value == 0) return '0';
+		$sign = '';
+		if ($value < 0) {
+			$sign = '-';
+			$value = -$value;
+		}
+		$alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@_';
+		$output = array($sign);
+		while ($value > 0) {
+			array_push($output, $alphabet[$value % 64]);
+			$value = $value >> 6;
+		}
+		return implode('', $output);
+	}
+	
+	function sort_and_remove_duplicates($items) {
+		$set = array();
+		foreach ($items as $item) {
+			$set['k' . $item] = $item;
+		}
+		$output = array();
+		foreach ($set as $item) {
+			array_push($output, $item);
+		}
+		sort($output);
+		return $output;
+	}
 ?>

@@ -4,12 +4,18 @@
 	require 'php/database.php';
 	
 	require 'php/api/account.php';
+	require 'php/api/forum.php';
 	
 	$suppress_skin = false;
 	require 'php/skin.php';
 	
 	function process_url_mapping($request) {
-		switch ($request['path']) {
+		$path = $request['path'];
+		$parts = $request['path_parts'];
+		$root = $parts[0];
+		$length = count($parts);
+		
+		switch ($path) {
 			case '/': return 'page_main.php';
 			case '/login': return 'page_login.php';
 			case '/logout': return 'page_logout.php';
@@ -18,12 +24,23 @@
 			case '/contact': return 'page_contact.php';
 			case '/about': return 'page_about.php';
 			default:
-				switch ($request['path_parts'][0]) {
+				switch ($root) {
 					case 'golf': return 'not_found.php';
 					case 'comp': return 'not_found.php';
 					case 'jams': return 'not_found.php';
 					case 'tutorials': return 'not_found.php';
-					case 'forum': return 'not_found.php';
+					case 'forum': 
+						if ($length == 1) {
+							return 'forum/main.php';
+						} else if ($length == 2) {
+							return 'forum/category.php';
+						} else if ($length == 3) {
+							$thread_id = intval($parts[2]);
+							if ($thread_id > 0) {
+								return 'forum/thread.php';
+							}
+						}
+						break;
 					default:
 						// TODO: do lookup on old NP articles and forward to blakeohare.com
 						break;
