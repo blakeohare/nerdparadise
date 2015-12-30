@@ -1,1 +1,4 @@
 /php/credentials.php
+/autograders/AutoGraderHarness/AutoGraderHarness/obj
+/autograders/AutoGraderHarness/AutoGraderHarness/bin
+/autograders/AutoGraderHarness/*.suo
