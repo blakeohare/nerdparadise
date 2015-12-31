@@ -106,28 +106,39 @@ namespace AutoGraderHarness
 			}
 			catch (System.Net.WebException we)
 			{
-				if (we.Response is System.Net.HttpWebResponse)
+				switch (we.Status)
 				{
-					System.Net.HttpWebResponse exResponse = we.Response as System.Net.HttpWebResponse;
-					this.ResponseBody = null;
-					switch (exResponse.StatusCode) {
-						case System.Net.HttpStatusCode.OK: this.ResponseCode = 200; break;
-						case System.Net.HttpStatusCode.NotFound: this.ResponseCode = 404; break;
-						case System.Net.HttpStatusCode.BadRequest: this.ResponseCode = 400; break;
-						case System.Net.HttpStatusCode.InternalServerError: this.ResponseCode = 500; break;
-						case System.Net.HttpStatusCode.ServiceUnavailable: this.ResponseCode = 503; break;
-						default: 
-							// TODO: others if ever needed.
-							break;
-					}
-					// TODO: how to get body?
-				}
-				else
-				{
-					throw new Exception();
+					case System.Net.WebExceptionStatus.Timeout:
+					case System.Net.WebExceptionStatus.ConnectFailure:
+					case System.Net.WebExceptionStatus.NameResolutionFailure:
+						System.Threading.Thread.Sleep(10000);
+						break;
+
+					default:
+						if (we.Response is System.Net.HttpWebResponse)
+						{
+							System.Net.HttpWebResponse exResponse = we.Response as System.Net.HttpWebResponse;
+							this.ResponseBody = null;
+							switch (exResponse.StatusCode)
+							{
+								case System.Net.HttpStatusCode.OK: this.ResponseCode = 200; break;
+								case System.Net.HttpStatusCode.NotFound: this.ResponseCode = 404; break;
+								case System.Net.HttpStatusCode.BadRequest: this.ResponseCode = 400; break;
+								case System.Net.HttpStatusCode.InternalServerError: this.ResponseCode = 500; break;
+								case System.Net.HttpStatusCode.ServiceUnavailable: this.ResponseCode = 503; break;
+								default:
+									// TODO: others if ever needed.
+									break;
+							}
+							// TODO: how to get body?
+						}
+						else
+						{
+							throw new Exception();
+						}
+						break;
 				}
 			}
-			
 		}
 	}
 }

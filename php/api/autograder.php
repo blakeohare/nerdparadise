@@ -121,9 +121,9 @@
 		
 		$item_id = intval($item['item_id']);
 		
-		$state = strtoupper(trim($state));
+		$status = strtoupper(trim($status));
 		
-		switch ($state) {
+		switch ($status) {
 			case 'NOT_STARTED':
 			case 'SETTING_UP':
 			case 'RUNNING':
@@ -138,7 +138,7 @@
 				return api_error('INVALID_STATE');
 		}
 		
-		sql_query("UPDATE `auto_grader_queue` SET `state` = '".sql_sanitize_string($state)."' LIMIT 1");
+		sql_query("UPDATE `auto_grader_queue` SET `state` = '".sql_sanitize_string($status)."' WHERE `item_id` = $item_id LIMIT 1");
 		return api_success();
 	}
 	

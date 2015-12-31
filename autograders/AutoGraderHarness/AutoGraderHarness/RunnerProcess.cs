@@ -114,8 +114,10 @@ namespace AutoGraderHarness
 			HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/poll/setstatus", new Dictionary<string,string>() {
 				{ "token", token },
 				{ "key", Util.HashWithSecret(token) },
-				{ "state", state.ToString() },
+				{ "status", state.ToString() },
 			});
+
+			request.Send();
 		}
 
 		private void ReportConclusion(string token, string output, string callbackArg)
