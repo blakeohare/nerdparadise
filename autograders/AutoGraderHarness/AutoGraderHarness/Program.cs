@@ -71,6 +71,7 @@ namespace AutoGraderHarness
 				else 
 				{
 					System.Threading.Thread.Sleep(millis);
+					millis = 0;
 				}
 			}
 		}

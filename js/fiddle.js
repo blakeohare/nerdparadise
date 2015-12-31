@@ -13,11 +13,9 @@ function fiddle_button_click() {
 	var code = document.getElementById('fiddle_code').value;
 	var language = document.getElementById('fiddle_language').value;
 	document.getElementById('fiddle_output_host').innerHTML = '(waiting)';
-	postForm('http://np10.nfshost.com/fiddle/poll', function(sc, content) {
-		if (sc == 200) {
-			fiddle_start_wait(content);
-		}
-	}, ['code', 'language'], [code, language]);
+	postForm('http://np10.nfshost.com/fiddle/poll', 
+		fiddle_start_wait,
+		['action', 'code', 'language'], ['create', code, language]);
 }
 
 function fiddle_parse_response(response) {
@@ -30,7 +28,9 @@ function fiddle_parse_response(response) {
 	return output;
 }
 
-function fiddle_start_wait(response) {
+function fiddle_start_wait(sc, response) {
+	if (sc != 200) return;
+	
 	response = fiddle_parse_response(response);
 	if (response.type == 'error') {
 		fiddle_context.active_token = null;
@@ -55,7 +55,10 @@ function fiddle_update() {
 	
 	if (fiddle_context.active_token != null) {
 		if (fiddle_is_poll_time(fiddle_context.counter++)) {
-			httpGet('http://np10.nfshost.com/fiddle/poll/' + fiddle_context.active_token, fiddle_apply_poll_updates);
+			postForm(
+				'http://np10.nfshost.com/fiddle/poll/', 
+				fiddle_apply_poll_updates,
+				['action', 'token'], ['poll', fiddle_context.active_token]);
 		}
 	}
 	
@@ -67,9 +70,9 @@ function fiddle_apply_poll_updates(sc, response) {
 		response = fiddle_parse_response(response);
 		if (response.token == fiddle_context.active_token) {
 			switch (response.type) {
-				case 'state': fiddle_display_output('#888', true, response.state); break;
-				case 'error': fiddle_display_output('#f00', true, response.error); fiddle_context.active_token = null; break;
-				case 'output': fiddle_display_output('#000', false, response.output); fiddle_context.active_token = null; break;
+				case 'state': fiddle_display_output('#888', true, response.msg); break;
+				case 'error': fiddle_display_output('#f00', true, response.msg); fiddle_context.active_token = null; break;
+				case 'output': fiddle_display_output('#000', false, response.msg); fiddle_context.active_token = null; break;
 				default: fiddle_display_output('#808', true, "Server returned unknown response."); break;
 			}
 		}

@@ -40,10 +40,10 @@ namespace AutoGraderHarness
 				}
 				else
 				{
-					HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/poll/" + token, new Dictionary<string, string>()
+					HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/poll/claim" , new Dictionary<string, string>()
 					{
 						{ "key", Util.HashWithSecret(token) },
-						{ "action", "claim" },
+						{ "token", token },
 					});
 					ThreadSafeConsoleWriter.Print("[" + token + "] Claiming...");
 					request.Send();
@@ -68,6 +68,7 @@ namespace AutoGraderHarness
 								default:
 									break;
 							}
+							ThreadSafeConsoleWriter.Print("[" + token + "] finished.");
 						}
 						else if (data[0] == "ERR" && data.Length > 1)
 						{
@@ -100,7 +101,7 @@ namespace AutoGraderHarness
 				grader.State = GraderState.RUNNING;
 				this.ReportStatus(token, grader.State);
 				string output = grader.Run();
-				this.ReportConclusion(token, output);
+				this.ReportConclusion(token, output, callback);
 			}
 			else
 			{
@@ -110,12 +111,25 @@ namespace AutoGraderHarness
 
 		private void ReportStatus(string token, GraderState state)
 		{
-
+			HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/poll/setstatus", new Dictionary<string,string>() {
+				{ "token", token },
+				{ "key", Util.HashWithSecret(token) },
+				{ "state", state.ToString() },
+			});
 		}
 
-		private void ReportConclusion(string token, string output)
+		private void ReportConclusion(string token, string output, string callbackArg)
 		{
 			// This will have to be different for actual grading.
+			HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/poll/finish", new Dictionary<string, string>()
+			{
+				{ "token", token },
+				{ "key", Util.HashWithSecret(token) },
+				{ "output", output },
+				{ "callback", callbackArg },
+			});
+
+			request.Send();
 		}
 	}
 }

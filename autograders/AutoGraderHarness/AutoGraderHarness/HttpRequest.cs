@@ -77,6 +77,7 @@ namespace AutoGraderHarness
 			return output.ToString();
 		}
 
+		// TODO: build in retry mechanism
 		public void Send()
 		{
 			System.Net.HttpWebRequest request = (System.Net.HttpWebRequest)System.Net.HttpWebRequest.Create(this.URL);
@@ -95,13 +96,38 @@ namespace AutoGraderHarness
 				streamWriter.Flush();
 				streamWriter.Close();
 			}
-
-			System.Net.HttpWebResponse response = (System.Net.HttpWebResponse)request.GetResponse();
-			this.ResponseCode = (int)response.StatusCode;
-
-			System.IO.StreamReader streamReader = new System.IO.StreamReader(response.GetResponseStream());
-			this.ResponseBody = streamReader.ReadToEnd();
-			streamReader.Close();
+			try
+			{
+				System.Net.HttpWebResponse response = (System.Net.HttpWebResponse)request.GetResponse();
+				this.ResponseCode = (int)response.StatusCode;
+				System.IO.StreamReader streamReader = new System.IO.StreamReader(response.GetResponseStream());
+				this.ResponseBody = streamReader.ReadToEnd();
+				streamReader.Close();
+			}
+			catch (System.Net.WebException we)
+			{
+				if (we.Response is System.Net.HttpWebResponse)
+				{
+					System.Net.HttpWebResponse exResponse = we.Response as System.Net.HttpWebResponse;
+					this.ResponseBody = null;
+					switch (exResponse.StatusCode) {
+						case System.Net.HttpStatusCode.OK: this.ResponseCode = 200; break;
+						case System.Net.HttpStatusCode.NotFound: this.ResponseCode = 404; break;
+						case System.Net.HttpStatusCode.BadRequest: this.ResponseCode = 400; break;
+						case System.Net.HttpStatusCode.InternalServerError: this.ResponseCode = 500; break;
+						case System.Net.HttpStatusCode.ServiceUnavailable: this.ResponseCode = 503; break;
+						default: 
+							// TODO: others if ever needed.
+							break;
+					}
+					// TODO: how to get body?
+				}
+				else
+				{
+					throw new Exception();
+				}
+			}
+			
 		}
 	}
 }

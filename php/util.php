@@ -161,31 +161,31 @@
 	}
 	
 	function build_response_moved_permanently($url) {
-		return build_response(301, null, $html, $url);
+		return build_response(301, null, $html, $url, null);
 	}
 	
 	function build_response_moved_temporarily($url) {
-		return build_response(302, null, $html, $url);
+		return build_response(302, null, $html, $url, null);
 	}
 	
 	function build_response_user_error($html) {
-		return build_response(400, 'BAD REQUEST! NO TREAT!', $html, null);
+		return build_response(400, 'BAD REQUEST! NO TREAT!', $html, null, null);
 	}
 	
 	function build_response_unauthenticated($html) {
-		return build_response(401, 'UNAUTHENTIFICATED', $html, null);
+		return build_response(401, 'UNAUTHENTIFICATED', $html, null, null);
 	}
 	
 	function build_response_forbidden($html) {
-		return build_response(403, "FORBIDD'N", $html, null);
+		return build_response(403, "FORBIDD'N", $html, null, null);
 	}
 	
 	function build_response_not_found($html) {
-		return build_response(404, "PAGE NOT FOUND", $html, null);
+		return build_response(404, "PAGE NOT FOUND", $html, null, null);
 	}
 	
 	function build_response_server_error($html) {
-		return build_response(500, "OH NO", $html, null);
+		return build_response(500, "OH NO", $html, null, null);
 	}
 	
 	function debug_print($thing) {

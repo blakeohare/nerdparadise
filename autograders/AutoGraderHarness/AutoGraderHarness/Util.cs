@@ -69,10 +69,9 @@ namespace AutoGraderHarness
 
 		public static string HashWithSecret(string value)
 		{
-			System.Security.Cryptography.SHA1 sha1 = System.Security.Cryptography.SHA1.Create(); // sha1 instances aren't thread safe so create a new instance each time.
 			value += secret;
 			byte[] bytes = value.Select<char, byte>(c => (byte)c).ToArray();
-			byte[] encryptedBytes = sha1.ComputeHash(bytes);
+			byte[] encryptedBytes = new System.Security.Cryptography.SHA1Managed().ComputeHash(bytes);
 			string[] hex = encryptedBytes.Select<byte, string>(b => b.ToString("X2")).ToArray();
 			return string.Join("", hex);
 		}

@@ -57,6 +57,7 @@ function nl2br(s) { return multi_replace(s, "\n", '<br />'); }
 function multi_replace(h, n, s) { return h.split(n).join(s); }
 function hex_digit_to_num(h) { return '0123456789abcdef'.indexOf(h); }
 function hex_to_string(h) {
+	if (!h) return '';
 	var o = [];
 	h = h.toLowerCase();
 	for (var i = 0; i < h.length; i += 2) {
