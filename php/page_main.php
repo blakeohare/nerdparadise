@@ -66,6 +66,10 @@
 		return main_page_wrap_widget('Practice', '/practice', 'green', 'Lorem ipsum dolar sit amet.');
 	}
 
+	function main_page_fiddle_widget($request) {
+		return main_page_wrap_widget('Fiddle', '/fiddle', 'green', 'Lorem ipsum dolar sit amet.');
+	}
+
 	function main_page_code_golf_widget($request) {
 		return main_page_wrap_widget('Code Golf', '/codegolf', 'blue', 'Lorem ipsum dolar sit amet.');
 	}
@@ -138,6 +142,11 @@
 					// Practice
 					'<div>',
 					main_page_practice_widget($request),
+					'</div>',
+				
+					// Fiddle
+					'<div>',
+					main_page_fiddle_widget($request),
 					'</div>',
 				
 				'</div>',

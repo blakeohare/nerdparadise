@@ -4,6 +4,7 @@
 	require 'php/database.php';
 	
 	require 'php/api/account.php';
+	require 'php/api/autograder.php';
 	require 'php/api/forum.php';
 	
 	$suppress_skin = false;
@@ -25,6 +26,15 @@
 			case '/about': return 'page_about.php';
 			default:
 				switch ($root) {
+					case 'autograder':
+						if ($parts[1] == 'poll') return "autograder/poll.php";
+						return "not_found.php";
+						
+					case 'fiddle': 
+						if ($length == 1) return "fiddle/main.php";
+						if ($parts[1] == 'poll') return 'fiddle/poll.php';
+						return 'not_found.php';
+						
 					case 'golf': return 'not_found.php';
 					case 'comp': return 'not_found.php';
 					case 'jams': return 'not_found.php';
@@ -195,6 +205,7 @@
 	require 'php/' . process_url_mapping($request);
 	
 	$response = execute($request);
+	
 	$status = intval($response['SC']);
 	switch ($status) {
 			
@@ -223,7 +234,7 @@
 		case 404:
 		case 500:
 			if ($status != 200) http_response_code($status);
-			if (!$suppress_skin) echo generate_header($response['title'], $request);
+			if (!$suppress_skin) echo generate_header($response['title'], $request, $response['js'], $response['css'], $response['onload']);
 			echo $response['body'];
 			if (!$suppress_skin) echo generate_footer($request);
 			break;

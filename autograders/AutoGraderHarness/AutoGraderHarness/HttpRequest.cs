@@ -27,9 +27,7 @@ namespace AutoGraderHarness
 
 		private static byte[] ConvertStringToBytes(string value)
 		{
-			byte[] bytes = new byte[value.Length * sizeof(char)];
-			System.Buffer.BlockCopy(value.ToCharArray(), 0, bytes, 0, bytes.Length);
-			return bytes;
+			return System.Text.Encoding.Default.GetBytes(value);
 		}
 
 		private string ConvertKeyValuesToFormString(Dictionary<string, string> kvp)
@@ -40,8 +38,11 @@ namespace AutoGraderHarness
 			{
 				if (isFirst)
 				{
-					output.Append('&');
 					isFirst = false;
+				}
+				else
+				{
+					output.Append('&');
 				}
 
 				output.Append(key);
@@ -54,9 +55,9 @@ namespace AutoGraderHarness
 				for (int i = 0; i < length; ++i)
 				{
 					c = valueBytes[i];
-					if ((i >= 'a' && i <= 'z') ||
-						(i >= 'A' && i <= 'Z') ||
-						(i >= '0' && i <= '9'))
+					if ((c >= 'a' && c <= 'z') ||
+						(c >= 'A' && c <= 'Z') ||
+						(c >= '0' && c <= '9'))
 					{
 						output.Append((char)c);
 					}
@@ -78,32 +79,29 @@ namespace AutoGraderHarness
 
 		public void Send()
 		{
-			if (this.Method == "GET")
+			System.Net.HttpWebRequest request = (System.Net.HttpWebRequest)System.Net.HttpWebRequest.Create(this.URL);
+			request.Method = this.Method;
+			request.UserAgent = "NP Autograder/1.0";
+
+			if (this.PostVars != null)
 			{
-				System.Net.HttpWebRequest request = (System.Net.HttpWebRequest)System.Net.HttpWebRequest.Create(this.URL);
-				request.Method = this.Method;
-				request.UserAgent = "NP Autograder/1.0";
+				string body = this.ConvertKeyValuesToFormString(this.PostVars);
+				request.ContentLength = body.Length;
 
-				if (this.PostVars != null)
-				{
-					string body = this.ConvertKeyValuesToFormString(this.PostVars);
-					request.ContentLength = body.Length;
+				request.ContentType = "application/x-www-form-urlencoded";
 
-					request.ContentType = "application/x-www-form-urlencoded";
-
-					System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(request.GetRequestStream());
-					streamWriter.Write(body);
-					streamWriter.Flush();
-					streamWriter.Close();
-				}
-
-				System.Net.HttpWebResponse response = (System.Net.HttpWebResponse)request.GetResponse();
-				this.ResponseCode = (int)response.StatusCode;
-
-				System.IO.StreamReader streamReader = new System.IO.StreamReader(response.GetResponseStream());
-				this.ResponseBody = streamReader.ReadToEnd();
-				streamReader.Close();
+				System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(request.GetRequestStream());
+				streamWriter.Write(body);
+				streamWriter.Flush();
+				streamWriter.Close();
 			}
+
+			System.Net.HttpWebResponse response = (System.Net.HttpWebResponse)request.GetResponse();
+			this.ResponseCode = (int)response.StatusCode;
+
+			System.IO.StreamReader streamReader = new System.IO.StreamReader(response.GetResponseStream());
+			this.ResponseBody = streamReader.ReadToEnd();
+			streamReader.Close();
 		}
 	}
 }

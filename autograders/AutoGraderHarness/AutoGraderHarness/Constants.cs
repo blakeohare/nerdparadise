@@ -7,6 +7,6 @@ namespace AutoGraderHarness
 {
 	public static class Constants
 	{
-		public static readonly int MAX_CONCURRENT_THREADS = 4;
+		public static readonly int MAX_CONCURRENT_THREADS = 1;
 	}
 }

@@ -86,6 +86,31 @@
 		return implode('', $output);
 	}
 	
+	function string_to_hex($str) {
+		$hex = '0123456789abcdef';
+		$output = array();
+		for ($i = 0; $i < strlen($str); ++$i) {
+			$c = ord($str[$i]) & 255;
+			array_push($output, $hex[$c >> 4]);
+			array_push($output, $hex[$c & 15]);
+		}
+		return implode('', $output);
+	}
+	
+	function hex_to_string($hex) {
+		$output = array();
+		$hex = strtolower($hex);
+		$length = strlen($hex);
+		$digits = '0123456789abcdef';
+		for ($i = 0; $i < $length; $i += 2) {
+			$a = strpos($digits, $hex[$i]);
+			$b = strpos($digits, $hex[$i + 1]);
+			if ($a === false || $b === false) return '';
+			array_push($output, chr($a * 16 + $b));
+		}
+		return implode('', $output);
+	}
+	
 	function api_error($message) {
 		return array('status' => 'ERROR', 'message' => $message, 'error' => true, 'OK' => false);
 	}
@@ -100,16 +125,39 @@
 		return $values;
 	}
 	
-	function build_response($http_status_code, $title, $body, $redirect) {
+	function build_response($http_status_code, $title, $body, $redirect, $flags) {
+		$js = array();
+		$css = array();
+		$onload = array();
+		if ($flags != null) {
+			if (isset($flags['js'])) {
+				$js = $flags['js'];
+				if ($js == null) $js = array();
+				if (is_string($js)) $js = array($js);
+			}
+			if (isset($flags['css'])) {
+				$css = $flags['css'];
+				if ($css == null) $css = array();
+				if (is_string($css)) $css = array($css);
+			}
+			if (isset($flags['onload'])) {
+				$onload = $flags['onload'];
+				if ($onload == null) $onload = array();
+				if (is_string($onload)) $onload = array($onload);
+			}
+		}
 		return array(
 			'SC' => $http_status_code,
 			'title' => trim($title),
 			'body' => trim($body),
+			'js' => $js,
+			'css' => $css,
+			'onload' => $onload,
 			'redirect' => $redirect);
 	}
 	
-	function build_response_ok($title, $html) {
-		return build_response(200, $title, $html, null);
+	function build_response_ok($title, $html, $flags = null) {
+		return build_response(200, $title, $html, null, $flags);
 	}
 	
 	function build_response_moved_permanently($url) {
@@ -234,5 +282,14 @@
 		}
 		sort($output);
 		return $output;
+	}
+	
+	function generate_gibberish($length) {
+		$chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+		$output = array();
+		while ($length-- > 0) {
+			array_push($output, $chars[rand(0, strlen($chars) - 1)]);
+		}
+		return implode("", $output);
 	}
 ?>

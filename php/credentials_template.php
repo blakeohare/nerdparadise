@@ -8,5 +8,6 @@
 		'mysql_username' => 'USER NAME',
 		'mysql_password' => 'PASSWORD',
 		'mysql_database' => 'DATABASE NAME',
+		'autograder_secret' => 'AUTOGRADER SECRET',
 	);
 ?>
