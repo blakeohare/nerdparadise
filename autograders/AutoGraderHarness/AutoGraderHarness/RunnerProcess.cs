@@ -40,7 +40,7 @@ namespace AutoGraderHarness
 				}
 				else
 				{
-					HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/poll/claim" , new Dictionary<string, string>()
+					HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/graderpoll/claim", new Dictionary<string, string>()
 					{
 						{ "key", Util.HashWithSecret(token) },
 						{ "token", token },
@@ -51,19 +51,22 @@ namespace AutoGraderHarness
 					if (request.ResponseCode == 200)
 					{
 						string[] data = request.ResponseBody.Trim().Split(',');
-						if (data[0] == "OK" && data.Length == 6)
+						if (data[0] == "OK" && data.Length == 9)
 						{
 							string language = Util.HexToString(data[1]);
 							string code = Util.HexToString(data[2]);
 							string callback = Util.HexToString(data[3]);
-							string tests = Util.HexToString(data[4]);
-							string feature = Util.HexToString(data[5]);
+							string testFunctionName = Util.HexToString(data[4]);
+							string expectedArgCount = Util.HexToString(data[5]);
+							string testInputList = Util.HexToString(data[6]);
+							string testOutputList = Util.HexToString(data[7]);
+							string feature = Util.HexToString(data[8]);
 
 							ThreadSafeConsoleWriter.Print("[" + token + "] running " + language + " entry for " + feature + ".");
 							switch (language)
 							{
 								case "crayon":
-									this.RunCrayonCode(token, code, callback, tests, feature);
+									this.RunCrayonCode(token, code, callback, testFunctionName, expectedArgCount, testInputList, testOutputList, feature);
 									break;
 								default:
 									break;
@@ -90,8 +93,74 @@ namespace AutoGraderHarness
 			}
 		}
 
-		private void RunCrayonCode(string token, string code, string callback, string tests, string feature)
+		private void RunCrayonCode(string token, string code, string callback, string testFunctionName, string rawArgCountValue, string testInputList, string testOutputList, string feature)
 		{
+			bool runTests = feature != "tinker";
+
+			string secretStartToken = Util.GetGibberishString();
+			string caseIteratorVar = Util.GetGibberishString();
+			string inputListVar = Util.GetGibberishString();
+			string outputListVar = Util.GetGibberishString();
+			string succeedToken = Util.GetGibberishString();
+			string failToken = Util.GetGibberishString();
+			string functionDefinedCorrectlyToken = Util.GetGibberishString();
+			string actualOutputVar = Util.GetGibberishString();
+			string ranCorrectlyVar = Util.GetGibberishString();
+			string answerCorrectVar = Util.GetGibberishString();
+			string answerWrongVar = Util.GetGibberishString();
+			string finishedToken = Util.GetGibberishString();
+			string dummyVar = Util.GetGibberishString();
+
+			if (runTests)
+			{
+				int argCount;
+				if (!int.TryParse(rawArgCountValue, out argCount))
+				{
+					this.ReportStatus(token, GraderState.ERROR_UNKNOWN);
+					return;
+				}
+
+				string invocation = testFunctionName + "(";
+				if (argCount == 0)
+				{
+					invocation += ")";
+				}
+				else if (argCount == 1)
+				{
+					invocation += inputListVar + "[" + caseIteratorVar + "])";
+				}
+				else
+				{
+					for (int i = 0; i < argCount; ++i)
+					{
+						if (i > 0) invocation += ", ";
+						invocation += inputListVar + "[" + caseIteratorVar + "][" + i + "]";
+					}
+					invocation += ")";
+				}
+
+				code += string.Join("\n", new string[] {
+					"\n",
+					"$print('" + secretStartToken + "');",
+					dummyVar + " = " + testFunctionName + ";",
+					"$print('" + functionDefinedCorrectlyToken + "');",
+					inputListVar + " = " + testInputList + ";",
+					outputListVar + " = " + testOutputList + ";",
+					"\n",
+					"for (" + caseIteratorVar + " = 0; " + caseIteratorVar + " < " + inputListVar + ".length; ++" + caseIteratorVar + ") {",
+					"  " + actualOutputVar + " = " + invocation + ";",
+					"  $print('" + ranCorrectlyVar + "');",
+					"  if (" + actualOutputVar + " == " + outputListVar + "[" + caseIteratorVar + "]) {",
+					"    $print('" + answerCorrectVar + "');",
+					"  } else {",
+					"    $print('" + answerWrongVar + "');",
+					"  }",
+					"}",
+					"$print('" + finishedToken + "');",
+					"",
+				});
+			}
+
 			CrayonGrader grader = new CrayonGrader(code);
 
 			grader.SetUp();
@@ -101,7 +170,38 @@ namespace AutoGraderHarness
 				grader.State = GraderState.RUNNING;
 				this.ReportStatus(token, grader.State);
 				string output = grader.Run();
-				this.ReportConclusion(token, output, callback);
+				if (runTests)
+				{
+					int startToken = output.IndexOf(secretStartToken);
+					if (startToken == -1)
+					{
+						this.ReportStatus(token, GraderState.ERROR_RUNTIME);
+					}
+					else
+					{
+						string gradesheet = output.Substring(startToken);
+						if (!gradesheet.Contains(functionDefinedCorrectlyToken))
+						{
+							this.ReportStatus(token, GraderState.ERROR_REQUIRED_FUNCTION_NOT_DEFINED);
+						}
+						else if (!gradesheet.Contains(finishedToken))
+						{
+							this.ReportStatus(token, GraderState.ERROR_RUNTIME);
+						}
+						else
+						{
+							int runs = gradesheet.Split(new string[] { ranCorrectlyVar }, StringSplitOptions.None).Length - 1;
+							int passes = gradesheet.Split(new string[] { answerCorrectVar }, StringSplitOptions.None).Length - 1;
+							int fails = gradesheet.Split(new string[] { answerWrongVar }, StringSplitOptions.None).Length - 1;
+
+							this.ReportConclusion(token, "SCORE," + runs + "," + passes + "," + fails, callback);
+						}
+					}
+				}
+				else
+				{
+					this.ReportConclusion(token, output, callback);
+				}
 			}
 			else
 			{
@@ -111,7 +211,7 @@ namespace AutoGraderHarness
 
 		private void ReportStatus(string token, GraderState state)
 		{
-			HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/graderpoll/setstatus", new Dictionary<string,string>() {
+			HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/graderpoll/setstatus", new Dictionary<string, string>() {
 				{ "token", token },
 				{ "key", Util.HashWithSecret(token) },
 				{ "status", state.ToString() },

@@ -1,7 +1,8 @@
 
 var ag_context = {
 	counter: 0,
-	active_token: null
+	active_token: null,
+	type: null
 };
 
 function ag_init(type) {
@@ -14,10 +15,11 @@ function ag_init(type) {
 function ag_button_click() {
 	var code = document.getElementById('ag_code').value;
 	var language = document.getElementById('ag_language').value;
+	var problem_id = document.getElementById('ag_problem_id').value;
 	document.getElementById('ag_output_host').innerHTML = '(waiting)';
 	postForm('/autograder/run', 
 		ag_start_wait,
-		['feature', 'action', 'code', 'language', 'problem_id'], ['tinker', 'create', code, language, '']);
+		['feature', 'action', 'code', 'language', 'problem_id'], [ag_context.type, 'create', code, language, problem_id]);
 }
 
 function ag_parse_response(response) {

@@ -8,11 +8,13 @@ namespace AutoGraderHarness
 	public static class Util
 	{
 		private static readonly Random random = new Random();
+		private static readonly string letters = "abcdefghijklmnopqrstuvwxyz";
 		private static readonly string folderNameChars = "abcdefghijklmnopqrstuvwxyz0123456789";
 
 		public static string GetGibberishString()
 		{
 			StringBuilder sb = new StringBuilder();
+			sb.Append(letters[random.Next(letters.Length)]);
 			for (int i = 0; i < 20; ++i)
 			{
 				sb.Append(folderNameChars[random.Next(folderNameChars.Length)]);

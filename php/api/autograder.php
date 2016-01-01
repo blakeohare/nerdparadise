@@ -1,4 +1,46 @@
 <?
+	
+	function api_autograder_generate_client_html($type, $nullable_language_info, $template_code, $problem_id) {
+		$include_language_picker = $nullable_language_info == null;
+		
+		if ($include_language_picker) {
+			$picker_html = array('<div>Language: <select id="ag_language">');
+			$languages = sql_query("SELECT `key`,`name` FROM `languages` WHERE `auto_grader_supported` = 1 ORDER BY `name`");
+			for ($i = 0; $i < $languages->num_rows; ++$i) {
+				$language = $languages->fetch_assoc();
+				array_push($picker_html, '<option value="'.$language['key'].'">');
+				array_push($picker_html, htmlspecialchars($language['name']));
+				array_push($picker_html, '</option>');
+			}
+			array_push($picker_html, '</select></div>');
+			$picker_html = implode("\n", $picker_html);
+		} else {
+			$picker_html = '<input type="hidden" id="ag_language" value="'.htmlspecialchars($nullable_language_info['key']).'" />';
+		}
+		
+		return implode("\n", array(
+			'<div>',
+				'<h2>Write some code</h2>',
+				
+				'<input type="hidden" id="ag_problem_id" value="'.intval($problem_id).'" />',
+				$picker_html,
+				
+				'<div>',
+				'<textarea id="ag_code" style="width:900px; height:400px;" spellcheck="false">'.htmlspecialchars($template_code).'</textarea>',
+				'</div>',
+				
+				// mitigate spam bots, to at least a small degree, by populating the button via JavaScript
+				'<div onload="ag_build_button()" id="ag_button_host"></div>',
+			
+			'</div>',
+			
+			'<div>',
+				'<h2>Output</h2>',
+				'<div id="ag_output_host"></div>',
+			'</div>',
+			));
+	}
+	
 	function api_autograder_get_item_status_for_client($token) {
 		$item = sql_query_item("SELECT * FROM `auto_grader_queue` WHERE `token` = '".sql_sanitize_string($token)."' LIMIT 1");
 		if ($item == null) return api_error('NOT_FOUND');
@@ -15,25 +57,24 @@
 		return $output;
 	}
 	
+	function api_autograder_create_new_practice_item($user_id, $language_key_or_id, $code, $problem_id) {
+		return api_autograder_create_new_item($user_id, 'practice', 'PRACTICE:'.$problem_id, $language_key_or_id, $code, $problem_id);
+	}
 	
-	function api_autograder_create_new_tinker_item($user_id, $language, $code) {
-		return api_autograder_create_new_item($user_id, 'tinker', '', $language, $code, null, null);
+	function api_autograder_create_new_tinker_item($user_id, $language_key_or_id, $code) {
+		return api_autograder_create_new_item($user_id, 'tinker', '', $language_key_or_id, $code, 0);
 	}
 	
 	function api_autograder_create_new_item(
 		$user_id,
 		$feature,
 		$callback_arg,
-		$language,
+		$language_key_or_id,
 		$code,
-		$test_input_array,
-		$test_output_array) {
+		$problem_id) {
 		
-		switch ($language) {
-			case 'crayon':
-			case 'python':
-				break;
-			default:
+		$language_info = api_autograder_get_language_info($language_key_or_id);
+		if ($language_info == null || !$language_info['auto_grader_supported']) {
 				return api_error('LANG_NOT_SUPPORTED');
 		}
 		
@@ -47,9 +88,9 @@
 			'time_created' => time(),
 			'time_processed' => 0,
 			'time_finished' => 0,
-			'language' => $language,
+			'language_id' => $language_info['language_id'],
 			'code' => $code,
-			'tests' => '', // TODO: this
+			'problem_id' => $problem_id,
 			'output' => '',
 			'callback_arg' => $callback_arg,
 			'feature' => $feature,
@@ -82,15 +123,30 @@
 			return api_error("WRONG_KEY");
 		}
 		
-		$item = sql_query_item("SELECT * FROM `auto_grader_queue` WHERE `token` = '".sql_sanitize_string($token)."' LIMIT 1");
+		$item = sql_query_item("
+			SELECT
+				ag.*,
+				lang.`key` AS 'language'
+			FROM `auto_grader_queue` ag
+			INNER JOIN `languages` lang ON (lang.`language_id` = ag.`language_id`)
+			WHERE ag.`token` = '".sql_sanitize_string($token)."' 
+			LIMIT 1");
 		if ($item == null) return api_error("NOT_FOUND");
 
 		$item_id = intval($item['item_id']);
 		$language = $item['language'];
 		$code = $item['code'];
-		$tests = $item['tests'];
 		$callback = $item['callback_arg'];
 		$feature = $item['feature'];
+		$problem_id = intval($item['problem_id']);
+		$problem = null;
+		if ($problem_id > 0) {
+			$problem = sql_query_item("SELECT `expected_function_name`,`expected_arg_count`,`input_list`,`output_list` FROM `code_problems` WHERE `problem_id` = $problem_id LIMIT 1");
+		}
+		
+		if ($problem == null && $feature != 'tinker') {
+			return api_error("NOT_FOUND");
+		}
 		
 		sql_query("
 			UPDATE `auto_grader_queue`
@@ -106,7 +162,10 @@
 			'language' => $language,
 			'code' => $code,
 			'feature' => $feature,
-			'tests' => $tests,
+			'expected_function_name' => $problem['expected_function_name'],
+			'expected_arg_count' => $problem['expected_arg_count'],
+			'input_list' => $problem['input_list'],
+			'output_list' => $problem['output_list'],
 			'callback' => $callback,
 		));
 	}
@@ -166,4 +225,66 @@
 		return api_success();
 	}
 	
+	function api_autograder_menu_get_problem($user_id, $language_id, $type, $competition_id, $problem_id) {
+		$problem = sql_query_item("SELECT * FROM `code_problems` WHERE `problem_id` = ".intval($problem_id)." LIMIT 1");
+		if ($problem == null) return null;
+		if ($problem['type'] != $type) return null;
+		if ($problem['competition_id'] != $competition_id) return null;
+		if ($problem['language_id'] != 0 && $problem['language_id'] != $language_id) return null;
+		return $problem;
+	}
+	
+	function api_autograder_menu_get_problems($user_id, $type, $competition_id, $language_id) {
+		$language_id = intval($language_id);
+		if ($type != 'golf' && $type != 'practice' && $type != 'competition') return api_error("INVALID_TYPE");
+		
+		if ($type == 'competition') {
+			$competition_id = intval($competition_id);
+			$where = "`competition_id` = $competition_id";
+		} else {
+			$where = "`type` = '$type' AND `language_id` = $language_id";
+		}
+		
+		$query = "
+			SELECT
+				`problem_id`,
+				`title`,
+				`user_solved_count`,
+				`shortest_solution_size`,
+				`shortest_solution_user_id`
+			FROM `code_problems`
+			WHERE $where
+			ORDER BY
+				`problem_id`";
+		debug_print($query);
+		$problems = sql_query($query);
+		
+		$output = array();
+		$ordered_problem_ids = array();
+		$user_ids = array();
+		for ($i = 0; $i < $problems->num_rows; ++$i) {
+			$problem = $problems->fetch_assoc();
+			$id = $problem['problem_id'];
+			array_push($ordered_problem_ids, $id);
+			$output['problem_'.$id] = $problem;
+			$user_id = intval($problem['shortest_solution_user_id']);
+			if ($user_id > 0) {
+				array_push($user_ids, $user_id);
+			}
+		}
+		$output['ordered_problem_ids'] = $ordered_problem_ids;
+		if (count($user_ids) > 0) {
+			$user_infos = api_account_fetch_mini_profiles($user_ids);
+			$output = array_merge($output, $user_infos);
+		}
+		return api_success($output);
+	}
+	
+	function api_autograder_get_language_info($language_key_or_id) {
+		if (''.$language_key_or_id == ''.intval($language_key_or_id)) {
+			return sql_query_item("SELECT * FROM `languages` WHERE `language_id` = ".intval($language_key_or_id)." LIMIT 1");
+		} else {
+			return sql_query_item("SELECT * FROM `languages` WHERE `key` = '".sql_sanitize_string($language_key_or_id)."' LIMIT 1");
+		}
+	}
 ?>

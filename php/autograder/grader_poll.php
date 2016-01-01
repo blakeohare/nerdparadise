@@ -21,7 +21,10 @@
 							string_to_hex($result['language']),
 							string_to_hex($result['code']),
 							string_to_hex($result['callback']),
-							string_to_hex($result['tests']),
+							string_to_hex($result['expected_function_name']),
+							string_to_hex($result['expected_arg_count']),
+							string_to_hex($result['input_list']),
+							string_to_hex($result['output_list']),
 							string_to_hex($result['feature']))));
 							
 				case 'setstatus':
