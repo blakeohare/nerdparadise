@@ -25,6 +25,10 @@ function httpRequest(url, method, callback, content, contentType) {
 	if (window.ActiveXObject) req = new ActiveXObject("Microsoft.XMLHTTP");
 	else if (window.XMLHttpRequest) req = new XMLHttpRequest();
 	else return;
+	
+	if (url.charAt(0) != '/') url = '/' + url;
+	url = 'http://np10.nfshost.com' + url;
+	
 	req.open(method, url, true);
 	req.onreadystatechange = function() {
 		if (req.readyState == 4) {

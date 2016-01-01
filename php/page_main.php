@@ -66,8 +66,8 @@
 		return main_page_wrap_widget('Practice', '/practice', 'green', 'Lorem ipsum dolar sit amet.');
 	}
 
-	function main_page_fiddle_widget($request) {
-		return main_page_wrap_widget('Fiddle', '/fiddle', 'green', 'Lorem ipsum dolar sit amet.');
+	function main_page_tinker_widget($request) {
+		return main_page_wrap_widget('Tinker', '/tinker', 'green', 'Lorem ipsum dolar sit amet.');
 	}
 
 	function main_page_code_golf_widget($request) {
@@ -144,9 +144,9 @@
 					main_page_practice_widget($request),
 					'</div>',
 				
-					// Fiddle
+					// Tinker
 					'<div>',
-					main_page_fiddle_widget($request),
+					main_page_tinker_widget($request),
 					'</div>',
 				
 				'</div>',

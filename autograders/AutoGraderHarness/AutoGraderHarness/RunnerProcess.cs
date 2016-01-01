@@ -111,7 +111,7 @@ namespace AutoGraderHarness
 
 		private void ReportStatus(string token, GraderState state)
 		{
-			HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/poll/setstatus", new Dictionary<string,string>() {
+			HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/graderpoll/setstatus", new Dictionary<string,string>() {
 				{ "token", token },
 				{ "key", Util.HashWithSecret(token) },
 				{ "status", state.ToString() },
@@ -123,7 +123,7 @@ namespace AutoGraderHarness
 		private void ReportConclusion(string token, string output, string callbackArg)
 		{
 			// This will have to be different for actual grading.
-			HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/poll/finish", new Dictionary<string, string>()
+			HttpRequest request = new HttpRequest("POST", "http://np10.nfshost.com/autograder/graderpoll/finish", new Dictionary<string, string>()
 			{
 				{ "token", token },
 				{ "key", Util.HashWithSecret(token) },

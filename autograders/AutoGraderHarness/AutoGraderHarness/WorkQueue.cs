@@ -15,7 +15,7 @@ namespace AutoGraderHarness
 		public bool PollForWork()
 		{
 			bool output = false;
-			HttpRequest request = new HttpRequest("GET", "http://np10.nfshost.com/autograder/poll", null);
+			HttpRequest request = new HttpRequest("GET", "http://np10.nfshost.com/autograder/graderpoll", null);
 			request.Send();
 			if (request.ResponseCode == 200)
 			{

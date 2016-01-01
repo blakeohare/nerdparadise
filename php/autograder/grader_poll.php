@@ -1,12 +1,12 @@
 <?
 	$suppress_skin = true;
 	function execute($request) {
-		if ($request['method'] == 'GET' && $request['path'] == '/autograder/poll') {
+		if ($request['method'] == 'GET' && $request['path'] == '/autograder/graderpoll') {
 			$tokens = api_autograder_get_work_queue();
 			return build_response_ok('', 'OK,'.count($tokens).','.implode(',', $tokens));
 		}
 		
-		if ($request['method'] == 'POST' && $request['path_parts'][1] == 'poll' && count($request['path_parts']) == 3) {
+		if ($request['method'] == 'POST' && $request['path_parts'][1] == 'graderpoll' && count($request['path_parts']) == 3) {
 			$action = $request['path_parts'][2];
 			$key = strtolower(trim($request['form']['key']));
 			$token = trim($request['form']['token']);

@@ -27,16 +27,33 @@
 			default:
 				switch ($root) {
 					case 'autograder':
-						if ($parts[1] == 'poll') return "autograder/poll.php";
+						if ($parts[1] == 'graderpoll') return 'autograder/grader_poll.php';
+						if ($parts[1] == 'run') return 'autograder/client_poll.php';
 						return "not_found.php";
 						
-					case 'fiddle': 
-						if ($length == 1) return "fiddle/main.php";
-						if ($parts[1] == 'poll') return 'fiddle/poll.php';
+					case 'tinker': 
+						if ($length == 1) return "tinker/main.php";
+						return 'not_found.php';
+					
+					case 'practice':
+						if ($length == 1) return 'practice/main.php';
+						if ($length == 2) return 'practice/problem_list.php'; // parts[1] is language
+						if ($length == 3 && $parts[2] == ''.intval($parts[2])) return 'practice/problem.php';
+						return 'not_found.php';
+					
+					case 'golf':
+						if ($length == 1) return 'golf/main.php';
+						if ($length == 2 && $parts[1] == ''.intval($parts[1])) return 'golf/challenge.php';
+						if ($length == 2 && $parts[1] == 'ranking') return 'golf/ranking.php';
+						if ($length > 1 && $parts[1] == 'tips') return 'content.php';
 						return 'not_found.php';
 						
-					case 'golf': return 'not_found.php';
 					case 'comp': return 'not_found.php';
+						if ($length == 1) return 'comp/main.php';
+						if ($length == 2) return 'comp/question_list.php';
+						if ($length == 3 && $parts[2] == ''.intval($parts[2])) return 'comp/question.php';
+						return 'not_found.php';
+						
 					case 'jams': return 'not_found.php';
 					case 'tutorials': return 'not_found.php';
 					case 'forum': 

@@ -16,8 +16,8 @@
 	}
 	
 	
-	function api_autograder_create_new_fiddle_item($user_id, $language, $code) {
-		return api_autograder_create_new_item($user_id, 'fiddle', '', $language, $code, null, null);
+	function api_autograder_create_new_tinker_item($user_id, $language, $code) {
+		return api_autograder_create_new_item($user_id, 'tinker', '', $language, $code, null, null);
 	}
 	
 	function api_autograder_create_new_item(
