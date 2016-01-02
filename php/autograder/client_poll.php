@@ -25,6 +25,9 @@
 						case 'practice':
 							$result = api_autograder_create_new_practice_item($request['user_id'], $language, $code, $problem_id);
 							break;
+						case 'golf':
+							$result = api_autograder_create_new_golf_item($request['user_id'], $language, $code, $problem_id);
+							break;
 						default:
 							return build_response_ok('', client_poll_encode_response(array('type' => 'error', 'msg' => 'what just happened?')));
 					}

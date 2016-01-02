@@ -43,5 +43,13 @@ namespace AutoGraderHarness.Graders
 		}
 
 		public abstract void SetUp();
+		protected abstract void ConvertJsonToCode(object jsonValue, StringBuilder sb);
+		
+		public string ConvertJsonToCode(object jsonValue)
+		{
+			StringBuilder sb = new StringBuilder();
+			ConvertJsonToCode(jsonValue, sb);
+			return sb.ToString();
+		}
 	}
 }

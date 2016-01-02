@@ -51,22 +51,33 @@ namespace AutoGraderHarness
 					if (request.ResponseCode == 200)
 					{
 						string[] data = request.ResponseBody.Trim().Split(',');
-						if (data[0] == "OK" && data.Length == 9)
+						if (data[0] == "OK" && data.Length == 10)
 						{
 							string language = Util.HexToString(data[1]);
 							string code = Util.HexToString(data[2]);
 							string callback = Util.HexToString(data[3]);
 							string testFunctionName = Util.HexToString(data[4]);
 							string expectedArgCount = Util.HexToString(data[5]);
-							string testInputList = Util.HexToString(data[6]);
-							string testOutputList = Util.HexToString(data[7]);
-							string feature = Util.HexToString(data[8]);
+							string[] argTypes = Util.HexToString(data[6]).Split('|');
+							string returnType = Util.HexToString(data[7]);
+							string testJson = Util.HexToString(data[8]);
+							string feature = Util.HexToString(data[9]);
+
+							List<object> testInput = null;
+							List<object> expectedOutput = null;
+
+							Dictionary<string, object> tests = JsonParser.ParseJsonIntoValue(testJson) as Dictionary<string, object>;
+							if (tests != null && tests.ContainsKey("input") && tests.ContainsKey("output"))
+							{
+								testInput = tests["input"] as List<object>;
+								expectedOutput = tests["output"] as List<object>;
+							}
 
 							ThreadSafeConsoleWriter.Print("[" + token + "] running " + language + " entry for " + feature + ".");
 							switch (language)
 							{
 								case "crayon":
-									this.RunCrayonCode(token, code, callback, testFunctionName, expectedArgCount, testInputList, testOutputList, feature);
+									this.RunCrayonCode(token, code, callback, testFunctionName, expectedArgCount, testInput, expectedOutput, returnType, argTypes, feature);
 									break;
 								default:
 									break;
@@ -93,7 +104,7 @@ namespace AutoGraderHarness
 			}
 		}
 
-		private void RunCrayonCode(string token, string code, string callback, string testFunctionName, string rawArgCountValue, string testInputList, string testOutputList, string feature)
+		private void RunCrayonCode(string token, string code, string callback, string testFunctionName, string rawArgCountValue, List<object> testInputList, List<object> testOutputList, string returnType, string[] argTypes, string feature)
 		{
 			bool runTests = feature != "tinker";
 
@@ -110,6 +121,8 @@ namespace AutoGraderHarness
 			string answerWrongVar = Util.GetGibberishString();
 			string finishedToken = Util.GetGibberishString();
 			string dummyVar = Util.GetGibberishString();
+
+			CrayonGrader grader = new CrayonGrader(code);
 
 			if (runTests)
 			{
@@ -144,8 +157,8 @@ namespace AutoGraderHarness
 					"$print('" + secretStartToken + "');",
 					dummyVar + " = " + testFunctionName + ";",
 					"$print('" + functionDefinedCorrectlyToken + "');",
-					inputListVar + " = " + testInputList + ";",
-					outputListVar + " = " + testOutputList + ";",
+					inputListVar + " = " + grader.ConvertJsonToCode(testInputList) + ";",
+					outputListVar + " = " + grader.ConvertJsonToCode(testOutputList) + ";",
 					"\n",
 					"for (" + caseIteratorVar + " = 0; " + caseIteratorVar + " < " + inputListVar + ".length; ++" + caseIteratorVar + ") {",
 					"  " + actualOutputVar + " = " + invocation + ";",
@@ -161,7 +174,7 @@ namespace AutoGraderHarness
 				});
 			}
 
-			CrayonGrader grader = new CrayonGrader(code);
+			grader = new CrayonGrader(code);
 
 			grader.SetUp();
 

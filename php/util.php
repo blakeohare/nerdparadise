@@ -89,6 +89,7 @@
 	function string_to_hex($str) {
 		$hex = '0123456789abcdef';
 		$output = array();
+		$str = ''.$str;
 		for ($i = 0; $i < strlen($str); ++$i) {
 			$c = ord($str[$i]) & 255;
 			array_push($output, $hex[$c >> 4]);
