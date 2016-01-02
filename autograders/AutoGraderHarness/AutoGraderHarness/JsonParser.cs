@@ -16,6 +16,8 @@ namespace AutoGraderHarness
 
 		public static object ParseJsonIntoValue(string rawValue)
 		{
+			if (rawValue == null || rawValue.Length == 0) return null;
+
 			try
 			{
 				return ParseJsonIntoValue(rawValue.ToCharArray(), rawValue.Length, new Index() { Value = 0 });

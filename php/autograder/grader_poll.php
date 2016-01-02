@@ -23,7 +23,7 @@
 							string_to_hex($result['callback']),
 							string_to_hex($result['expected_function_name']),
 							string_to_hex($result['expected_arg_count']),
-							string_to_hex(implode('|', $result['arg_types'])),
+							string_to_hex((!!$result['arg_types']) ? implode('|', $result['arg_types']) : ''),
 							string_to_hex($result['return_type']),
 							string_to_hex($result['test_json']),
 							string_to_hex($result['feature']))));

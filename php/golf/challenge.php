@@ -5,8 +5,6 @@
 		
 		if ($problem == null) return build_response_not_found("Golf Problem not found.");
 		
-		debug_print($problem);
-		
 		$output = array(
 			'<h1>',
 			htmlspecialchars($problem['title']),
