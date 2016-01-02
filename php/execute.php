@@ -31,7 +31,7 @@
 						if ($parts[1] == 'run') return 'autograder/client_poll.php';
 						return "not_found.php";
 						
-					case 'tinker': 
+					case 'tinker':
 						if ($length == 1) return "tinker/main.php";
 						return 'not_found.php';
 					
@@ -56,7 +56,7 @@
 						
 					case 'jams': return 'not_found.php';
 					case 'tutorials': return 'not_found.php';
-					case 'forum': 
+					case 'forum':
 						if ($length == 1) {
 							// /forum
 							return 'forum/main.php';
@@ -79,6 +79,8 @@
 							$thread_id = intval($parts[2]);
 							if ($parts[3] == 'reply') return 'forum/post.php';
 							if ($thread_id > 0 && substr($parts[3], 0, strlen('page')) == 'page') {
+								return 'forum/thread.php';
+							} else if ($thread_id > 0 && $parts[3] == 'new') {
 								return 'forum/thread.php';
 							}
 						}

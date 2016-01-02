@@ -51,10 +51,12 @@
 				$thread_title = trim($thread_title_if_new);
 				if (strlen($thread_title) == 0) return api_error("THREAD_TITLE_BLANK");
 				
-				$post = api_forum_create_post_impl($user_id, $is_admin, $cateogry_id, 0, $content);
+				$post = api_forum_create_post_impl($user_id, $is_admin, $category_id, 0, $content);
 			} else {
 				// reply to thread
-				$post = api_forum_create_post_impl($user_id, $is_admin, $cateogry_id, $thread_info['thread_id'], $content);
+				$thread_info = api_forum_get_thread_info($user_id, $is_admin, $thread_id, false);
+				$post = api_forum_create_post_impl($user_id, $is_admin, $category_id, $thread_id, $content);
+				
 			}
 		} else if ($category_id == 0) {
 			return api_error("NO_CATEGORY_DEFINED");
@@ -95,7 +97,7 @@
 	
 	// If no thread is defined, create an orphaned post. It is the caller's responsibility to un-orphan it.
 	// Thread infor is already confirmed if thread_id is non-zero.
-	function api_forum_create_post_impl($user_id, $is_admin, $cateogry_id, $thread_id, $content) {
+	function api_forum_create_post_impl($user_id, $is_admin, $category_id, $thread_id, $content) {
 		$post_id = sql_insert('forum_posts', array(
 			'thread_id' => $thread_id,
 			'user_id' => $user_id,
@@ -203,6 +205,7 @@
 	}
 	
 	function api_forum_canonicalize_thread_db_entry($thread) {
+		if ($thread == null) return null;
 		$flags = $thread['flags'];
 		$is_sticky = false;
 		$is_locked = false;
@@ -275,18 +278,19 @@
 			$post = $posts->fetch_assoc();
 			array_push($post_ids, $post['post_id']);
 		}
-		$output = api_forum_get_posts($post_ids, true, true);
+		$output = api_forum_get_posts($post_ids, true, true, true);
 		$output['ordered_post_ids'] = $post_ids;
 		return $output;
 	}
 	
-	function api_forum_get_posts($post_ids, $fetch_thread_info_too = false, $fetch_user_info_too = false) {
+	function api_forum_get_posts($post_ids, $fetch_thread_info_too = false, $fetch_user_info_too = false, $fetch_category_info_too = false) {
 		$post_infos = array();
 		$post_ids = sort_and_remove_duplicates($post_ids);
 		if (count($post_ids) > 0) {
 			$posts = sql_query("SELECT * FROM `forum_posts` WHERE `post_id` IN (".implode(',', $post_ids).")");
 			$thread_ids = array();
 			$user_ids = array();
+			$category_ids = array();
 			for ($i = 0; $i < $posts->num_rows; ++$i) {
 				$post = api_forum_canonicalize_post_db_entry($posts->fetch_assoc());
 				$post_infos['post_'.$post['post_id']] = $post;
@@ -300,6 +304,7 @@
 					for ($i = 0; $i < $threads->num_rows; ++$i) {
 						$thread = api_forum_canonicalize_thread_db_entry($threads->fetch_assoc());
 						$post_infos['thread_'.$thread['thread_id']] = $thread;
+						array_push($category_ids, $thread['category_id']);
 					}
 				}
 			}
@@ -308,6 +313,18 @@
 				$user_infos = api_account_fetch_mini_profiles($user_ids);
 				foreach ($user_infos as $key => $value) {
 					$post_infos[$key] = $value;
+				}
+			}
+			
+			
+			if ($fetch_category_info_too) {
+				$category_ids = sort_and_remove_duplicates($category_ids);
+				if (count($category_ids) > 0) {
+					$categories = sql_query("SELECT * FROM `forum_categories` WHERE `category_id` IN (".implode(', ', $category_ids).")");
+					for ($i = 0; $i < $categories->num_rows; ++$i) {
+						$category = api_forum_canonicalize_category_db_entry($categories->fetch_assoc());
+						$post_infos['category_'.$category['category_id']] = $category;
+					}
 				}
 			}
 		}
@@ -349,5 +366,17 @@
 		return $output;
 	}
 	
-	
+	function api_forum_get_thread_info($user_id, $is_admin, $thread_id, $fetch_category_info_too = false) {
+		$thread_info = api_forum_canonicalize_thread_db_entry(sql_query_item("SELECT * FROM `forum_threads` WHERE `thread_id` = ".intval($thread_id)." LIMIT 1"));
+		if ($thread_info == null) return null;
+		if ($fetch_category_info_too) {
+			$category_id = $thread_info['category_id'];
+			$category_info = api_forum_get_category_info($category_id);
+			if (!$is_admin && $category_info['is_admin_visible']) {
+				return null;
+			}
+			$thread_info['category_info'] = $category_info;
+		}
+		return $thread_info;
+	}
 ?>
