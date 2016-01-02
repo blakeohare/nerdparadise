@@ -259,6 +259,27 @@
 		return $post_info; // TODO: this
 	}
 	
+	function api_forum_fetch_posts_for_thread($user_id, $category_key, $thread_id, $page_id) {
+		
+		$post_ids = array();
+		$per_page = 25;
+		
+		// Future optimization:
+		// forum memory table that has a key of <thread_id+page_id> and list of post ID's on that page
+		// if key not found, fall back to doing it the old way. 
+		// Increase the limit in the query to per_page + 1 and use that to determine if the result should
+		// be stored.
+		
+		$posts = sql_query("SELECT `post_id` FROM `forum_posts` WHERE `thread_id` = $thread_id ORDER BY `post_id` LIMIT ".($page_id * $per_page).", $per_page");
+		for ($i = 0; $i < $posts->num_rows; ++$i) {
+			$post = $posts->fetch_assoc();
+			array_push($post_ids, $post['post_id']);
+		}
+		$output = api_forum_get_posts($post_ids, true, true);
+		$output['ordered_post_ids'] = $post_ids;
+		return $output;
+	}
+	
 	function api_forum_get_posts($post_ids, $fetch_thread_info_too = false, $fetch_user_info_too = false) {
 		$post_infos = array();
 		$post_ids = sort_and_remove_duplicates($post_ids);
@@ -274,7 +295,13 @@
 			}
 			
 			if ($fetch_thread_info_too) {
-				// TODO: fetch thread info and place in output array with thread_ prefix
+				if (count($thread_ids) > 0) {
+					$threads = sql_query("SELECT * FROM `forum_threads` WHERE `thread_id` IN (".implode(', ', $thread_ids).")");
+					for ($i = 0; $i < $threads->num_rows; ++$i) {
+						$thread = api_forum_canonicalize_thread_db_entry($threads->fetch_assoc());
+						$post_infos['thread_'.$thread['thread_id']] = $thread;
+					}
+				}
 			}
 			
 			if ($fetch_user_info_too) {

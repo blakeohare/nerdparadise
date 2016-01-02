@@ -75,6 +75,12 @@
 								// /forum/{category}/post
 								return 'forum/post.php';
 							}
+						} else if ($length == 4) {
+							$thread_id = intval($parts[2]);
+							if ($parts[3] == 'reply') return 'forum/post.php';
+							if ($thread_id > 0 && substr($parts[3], 0, strlen('page')) == 'page') {
+								return 'forum/thread.php';
+							}
 						}
 						break;
 					default:
