@@ -1,6 +1,8 @@
 <?
 	$_DB = null;
 	
+	$_DB_QUERY_LOG = array();
+	
 	function sql_get_db() {
 		global $_DB;
 		
@@ -18,14 +20,27 @@
 		return $_DB;
 	}
 	
+	function sql_log_query($query, $time) {
+		global $_DB_QUERY_LOG;
+		array_push($_DB_QUERY_LOG, array($query, $time));
+	}
+	
+	function sql_get_logged_queries() {
+		global $_DB_QUERY_LOG;
+		return $_DB_QUERY_LOG;
+	}
+	
 	function sql_query($query, $print = false) {
 		$db = sql_get_db();
 		
 		if ($print) {
 			debug_print($query);
 		}
-		
+		$start = microtime(true);
 		$output = $db->query(trim($query));
+		$end = microtime(true);
+		$diff = $end - $start;
+		sql_log_query($query, $end - $start);
 		
 		if ($db->errno == 0) {
 			return $output;

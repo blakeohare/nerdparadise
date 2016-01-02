@@ -43,15 +43,32 @@
 	
 	function generate_footer($request) {
 		
-		$output = array(
-			'',
-			'</div>',
-			'</div>',
-			'<div style="font-family: &quot;Consola&quot;, monospace; font-size:10px; color:#444; padding:8px;">',
-			nl2br(str_replace(' ', '&nbsp;', htmlspecialchars(universal_to_string($request)))),
-			'</div>',
-			'</body>',
-			'</html>');
+		$output = array();
+		array_push($output, '</div>');
+		array_push($output, '</div>');
+		
+		if ($request['is_admin']) {
+			array_push($output, '<div style="font-family: &quot;Consola&quot;, monospace; font-size:10px; color:#444; padding:8px;">');
+			array_push($output, nl2br(str_replace(' ', '&nbsp;', htmlspecialchars(universal_to_string($request)))));
+			
+			array_push($output, '<br /><br />');
+			array_push($output, 'Queries:<table border="1">');
+			foreach (sql_get_logged_queries() as $query) {
+				$sql = $query[0];
+				$time = $query[1];
+				$bg_color = '#000';
+				$fg_color = '#888';
+				if ($time > .01) {
+					$bg_color = '#f00';
+					$fg_color = '#000';
+				}
+				array_push($output, '<tr style="color:'.$fg_color.'; background-color:'.$bg_color.'"><td>'.htmlspecialchars($sql).'</td><td>'.$time.'</td></tr>');
+			}
+			array_push($output, '</table>');
+			array_push($output, '</div>');
+		}
+		array_push($output, '</body>');
+		array_push($output, '</html>');
 		
 		return implode("\n", $output);
 	}
