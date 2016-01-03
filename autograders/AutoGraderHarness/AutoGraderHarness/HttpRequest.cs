@@ -111,6 +111,7 @@ namespace AutoGraderHarness
 					case System.Net.WebExceptionStatus.Timeout:
 					case System.Net.WebExceptionStatus.ConnectFailure:
 					case System.Net.WebExceptionStatus.NameResolutionFailure:
+					case System.Net.WebExceptionStatus.ConnectionClosed:
 						System.Threading.Thread.Sleep(10000);
 						break;
 
