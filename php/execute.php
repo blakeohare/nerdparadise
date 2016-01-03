@@ -20,7 +20,6 @@
 			case '/': return 'page_main.php';
 			case '/login': return 'page_login.php';
 			case '/logout': return 'page_logout.php';
-			case '/faq': return 'page_faq.php';
 			case '/register': return 'register.php';
 			case '/secretdebug': return 'secret_debug.php';
 			case '/contact': return 'page_contact.php';
