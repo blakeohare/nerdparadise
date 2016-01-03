@@ -29,7 +29,7 @@
 			$error == null ? '' : nl2br(htmlspecialchars($error)),
 			'<form action="/login" method="post">',
 			'Username: <input type="text" name="login_username" value="'.htmlspecialchars($username).'"/><br />',
-			'Password: <input type="text" name="login_password" /><br />',
+			'Password: <input type="password" name="login_password" /><br />',
 			'<input type="submit" name="submit" value="Login" />',
 			'</form>',
 			);

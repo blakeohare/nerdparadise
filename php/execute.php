@@ -21,8 +21,10 @@
 			case '/login': return 'page_login.php';
 			case '/logout': return 'page_logout.php';
 			case '/faq': return 'page_faq.php';
+			case '/register': return 'register.php';
 			case '/secretdebug': return 'secret_debug.php';
 			case '/contact': return 'page_contact.php';
+			case '/tos': return 'tos.php';
 			case '/about': return 'page_about.php';
 			default:
 				switch ($root) {
@@ -123,6 +125,7 @@
 	function get_http_request() {
 		$url_parts = get_url_parts();
 		$path = '/' . implode('/', $url_parts);
+		$is_logout = $path == '/logout';
 		$method = strtoupper(trim($_SERVER['REQUEST_METHOD']));
 		$verified_user_id = 0;
 		$login_id = null;
@@ -177,7 +180,7 @@
 		
 		$ttl_hours = 24 * 30; // change this for other clients upon request.
 		
-		if (isset($form['login_username'])) {
+		if (!$is_logout && isset($form['login_username'])) {
 			$login_result = api_account_create_session($login_result['name'], $form['login_password'], $client, $ip, $ttl_hours);
 			if ($login_result['status'] == 'OK') {
 				$user_id = $login_result['user_id'];
@@ -187,7 +190,7 @@
 		
 		$login_failure = false;
 		$user_info = null;
-		if (strlen($session_token) > 0) {
+		if (!$is_logout && strlen($session_token) > 0) {
 			$user_info = api_account_authenticate_with_session($session_token, $ip);
 			if ($user_info['status'] != 'OK') {
 				$user_info = null;
@@ -202,8 +205,12 @@
 			$name = $user_info['name'];
 		}
 		
-		$_COOKIE['nptoken'] = $session_token;
-		$_COOKIE['npclient'] = 'web';
+		if ($is_logout) {
+			$session_token = '';
+		}
+		
+		setcookie('npclient', 'web', $expire);
+		setcookie('nptoken', $session_token, $expire);
 		
 		return array(
 			'method' => $method,

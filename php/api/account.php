@@ -1,7 +1,9 @@
 <?
 	function api_account_register_user($name, $email, $password_plaintext1, $password_plaintext2, $current_ip) {
 		$name = trim($name);
+		$email = trim($email);
 		
+		if (strlen($name) == 0) return api_error('NAME_BLANK');
 		if (strlen($name) > 20) return api_error('NAME_TOO_LONG');
 		if (strlen($name) < 2) return api_error('NAME_TOO_SHORT');
 		
@@ -22,6 +24,9 @@
 		
 		if (strlen($login_id) == 0) return api_error('NAME_NO_ALPHANUMS');
 		
+		$email_check = api_account_validate_email($email);
+		if (!$email_check['OK']) return $email_check;
+		
 		$pw_check = api_account_validate_password($name, $password_plaintext1, $password_plaintext2);
 		if ($pw_check['status'] == 'ERROR') {
 			return $pw_check;
@@ -36,8 +41,8 @@
 		$user_id = sql_insert("users", array(
 			'name' => $name,
 			'login_id' => $login_id,
-			'pass_hash' => api_account_hash_password($password_plaintext),
-			'email_addr' => $email_address,
+			'pass_hash' => api_account_hash_password($password),
+			'email_addr' => $email,
 			'time_registered' => time(),
 			'time_last_online' => 0,
 			'ip_registered' => $current_ip));
@@ -45,6 +50,22 @@
 		if ($user_id == null) return api_error('UNKNOWN_ERROR');
 		
 		return api_success(array('user_id' => $user_id));
+	}
+	
+	function api_account_validate_email($email) {
+		$email = trim($email);
+		if (strlen($email) == 0) return api_error('EMAIL_BLANK');
+		
+		$parts = explode('@', $email);
+		if (count($parts) != 2) return api_error('INVALID_EMAIL');
+		
+		$name = $parts[0];
+		$domain = $parts[1];
+		$domain_parts = explode('.', $domain);
+		if (count($domain_parts) == 1) return api_error('INVALID_EMAIL');
+		if (strlen($name) == 0) return api_error('INVALID_EMAIL');
+		// eh, good enough.
+		return api_success();
 	}
 	
 	function api_account_validate_password($username, $password1, $password2) {
