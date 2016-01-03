@@ -74,7 +74,7 @@
 	}
 
 	function main_page_code_golf_widget($request) {
-		return main_page_wrap_widget('Code Golf', '/codegolf', 'blue', 'Lorem ipsum dolar sit amet.');
+		return main_page_wrap_widget('Code Golf', '/golf', 'blue', 'Lorem ipsum dolar sit amet.');
 	}
 
 	function main_page_competitions_widget($request) {

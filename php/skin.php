@@ -43,6 +43,8 @@
 			'  .hfont { font-family: "Share Tech", sans-serif; }',
 			'  h1, h2, h3, h4, h5, h6 { margin:0px; }',
 			'  body { background-color:#111; font-size:12px; text-align:justify; }',
+			'  a:link, a:visited { text-decoration:none; color:#04f; }',
+			'  a:hover { text-decoration:underline; color:#28d;  }',
 			'  .main_nav { background-color:#282828; color:#ddd; font-size:11px; }',
 			'  .main_nav a:link, .main_nav a:visited { font-weight: bold; text-decoration:none; color:#fff; }',
 			'  .main_nav a:hover { font-weight: bold; text-decoration:underline; color:#ccc;  }',
