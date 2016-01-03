@@ -33,21 +33,24 @@
 		
 		
 		return implode("\n", array(
-			'<div style="margin-left:8px; margin-bottom:20px; border-left:8px solid #'.$bar_color.';">',
+			//'<div style="margin-left:8px; margin-bottom:20px; border-left:8px solid #'.$bar_color.';">',
 			'<div style="padding-left:8px;">',
-			'<h2 style="font-weight:bold; margin-bottom:3px;">',
+			'<h2 class="hfont">',
 			'<a href="'.$link.'" style="text-decoration:none; color:#'.$header_color.'">'.$title.'</a>',
 			'</h2>',
 			'<div style="font-size:12px; padding-bottom:25px;">',
 			$html,
 			'</div>',
 			'</div>',
-			'</div>'
+			//'</div>'
 			));
 	}
 	
 	function main_page_about_widget($request) {
-		return main_page_wrap_widget('About', '/about', 'red', 'Lorem ipsum dolar sit amet.');
+		$shpiel = array(
+			"Nerd Paradise started in 1999 as my dumping ground for my video game MIDI collection and Rubik's Cube solutions. Somehow it's now a site for programmers. You can read all about it <a href=\"/about\">here</a>.",
+			);
+		return main_page_wrap_widget('About', '/about', 'red', '<p>'.implode('</p><p>', $shpiel).'</p>');
 	}
 	
 	function main_page_achievements_widget($request) {
@@ -85,7 +88,7 @@
 	function main_page_render_marquee($request) {
 		$output = array(
 			// dynamically set the background color (and possibly fade it) based on the active marquee image.
-			'<div style="width:920px; height:330px;margin-left:20px; background-color:#000;">',
+			'<div style="height:330px;background-color:#000;">',
 			
 			'<div style="float:left; background-color:#008; width:600px; height:300px;">',
 			// background image
@@ -93,7 +96,7 @@
 			'</div>',
 			
 			'<div style="float:right; width:300px; padding:8px;">',
-			'Text content',
+			'Text content2',
 			'</div>',
 			
 			'<div style="clear:both; background-color:#888; color:#fff; height:30px; text-align:center;">',
@@ -112,60 +115,62 @@
 			main_page_render_marquee($request),
 			'</div>',
 			
-			'<div style="width:950px;">',
+			'</div>', // end main block
+			
+			'<div style="padding-top:20px;">',
 			
 				// column 1
-				'<div style="float:left; width:300px;">',
+				'<div style="float:left; width:306px;">',
 				
 					// About
-					'<div>',
+					'<div class="block">',
 					$request['user_id'] == 0
 						? main_page_about_widget($request)
 						: main_page_achievements_widget($request),
 					'</div>',
 					
 					// Forum
-					'<div>',
+					'<div class="block" style="margin-top:20px;">',
 					main_page_forum_widget($request),
 					'</div>',
 				
 				'</div>',
 				
 				// column 2
-				'<div style="float:left; width:300px; margin-left:10px;">',
+				'<div style="float:left; width:327px; margin-left:20px;">',
 				
 					// Tutorials
-					'<div>',
+					'<div class="block">',
 					main_page_tutorials_widget($request),
 					'</div>',
 					
 					// Practice
-					'<div>',
+					'<div class="block" style="margin-top:20px;">',
 					main_page_practice_widget($request),
 					'</div>',
 				
 					// Tinker
-					'<div>',
+					'<div class="block" style="margin-top:20px;">',
 					main_page_tinker_widget($request),
 					'</div>',
 				
 				'</div>',
 				
 				// column 2
-				'<div style="float:left; width:300px; margin-left:10px;">',
+				'<div style="float:left; width:326px; margin-left:20px;">',
 				
 					// Code Golf
-					'<div>',
+					'<div class="block">',
 					main_page_code_golf_widget($request),
 					'</div>',
 					
 					// Competitions
-					'<div>',
+					'<div class="block" style="margin-top:20px;">',
 					main_page_competitions_widget($request),
 					'</div>',
 					
 					// Game Jams
-					'<div>',
+					'<div class="block" style="margin-top:20px;">',
 					main_page_game_jam_widget($request),
 					'</div>',
 				'</div>',
@@ -173,6 +178,10 @@
 			
 				'<div style="clear:both;"></div>',
 			'</div>',
+			
+			// re-open main block
+			'<div class="fullblock" style="margin-top:20px;">',
+			'lorem ipsum',
 		);
 		
 		return build_response_ok("Nerd Paradise", implode("\n", $output));
