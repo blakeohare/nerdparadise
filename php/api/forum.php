@@ -379,4 +379,14 @@
 		}
 		return $thread_info;
 	}
+	
+	function api_forum_get_users_online() {
+		$user_ids_raw = sql_query("SELECT `user_id` FROM `sessions` WHERE `last_visit` > ".(time() - 15 * 60)." GROUP BY `user_id`");
+		$user_ids = array();
+		for ($i = 0; $i < $user_ids_raw->num_rows; ++$i) {
+			$user_id = $user_ids_raw->fetch_assoc();
+			array_push($user_ids, $user_id['user_id']);
+		}
+		return api_account_fetch_mini_profiles($user_ids);
+	}
 ?>

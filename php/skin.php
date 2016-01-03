@@ -49,7 +49,7 @@
 			'  .main_nav a:link, .main_nav a:visited { font-weight: bold; text-decoration:none; color:#fff; }',
 			'  .main_nav a:hover { font-weight: bold; text-decoration:underline; color:#ccc;  }',
 			'  .main_nav td { padding:8px; padding-right:70px;}',
-			'  .fullblock { width:960px; background-color:#fff; padding:20px; }',
+			'  .fullblock { width:920px; background-color:#fff; padding:20px; }',
 			'  .block { background-color:#fff; padding:20px; }',
 			
 			' </style>',

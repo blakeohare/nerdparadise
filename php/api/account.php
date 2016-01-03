@@ -313,16 +313,24 @@
 	function api_account_fetch_mini_profiles($user_ids) {
 		$user_ids = sort_and_remove_duplicates($user_ids);
 		$output = array();
+		$keys_to_id = array();
+		$ordered_keys = array();
 		if (count($user_ids) > 0) {
 			$user_infos = sql_query("
 				SELECT
 					`user_id`,`login_id`,`name`,`flags`,`image_id`,`time_last_online`,`post_count`
 				FROM `users`
 				WHERE `user_id` IN (".implode(', ', $user_ids).")");
-			foreach ($user_infos as $user_info) {
-				$output['user_'.$user_info['user_id']] = api_account_canonicalize_user_db_entry($user_info);
+			for ($i = 0; $i < $user_infos->num_rows; ++$i) {
+				$user_info = api_account_canonicalize_user_db_entry($user_infos->fetch_assoc());
+				$output['user_'.$user_info['user_id']] = $user_info;
+				$keys_to_id[$user_info['login_id']] = $user_info['user_id'];
+				array_push($ordered_keys, $user_info['login_id']);
 			}
+			sort($ordered_keys);
 		}
+		$output['keys_to_user_ids'] = $keys_to_id;
+		$output['ordered_user_keys'] = $ordered_keys;
 		return $output;
 	}
 ?>
