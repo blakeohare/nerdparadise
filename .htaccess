@@ -1,3 +1,2 @@
 RewriteEngine on
 RewriteRule ^([a-zA-Z0-9/]+)$ index.php?url=$1 [L]
-RewriteRule ^([a-zA-Z0-9/]+).xml$ index.php?url=feed/$1 [L]
