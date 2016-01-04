@@ -59,6 +59,7 @@
 			
 			'<div class="hfont" style="font-size:48px;">',
 			'Nerd Paradise',
+			'<span style="color:#f00; font-size:14px; font-weight:bold;">(Alpha)</span>',
 			'</div>',
 			
 			'</div>',

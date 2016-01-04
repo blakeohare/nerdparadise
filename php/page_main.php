@@ -137,7 +137,7 @@
 				'</div>',
 				
 				// column 2
-				'<div style="float:left; width:327px; margin-left:20px;">',
+				'<div style="float:left; width:307px; margin-left:20px;">',
 				
 					// Tutorials
 					'<div class="block">',
@@ -157,7 +157,7 @@
 				'</div>',
 				
 				// column 2
-				'<div style="float:left; width:326px; margin-left:20px;">',
+				'<div style="float:left; width:307px; margin-left:20px;">',
 				
 					// Code Golf
 					'<div class="block">',
