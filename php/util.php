@@ -113,13 +113,14 @@
 	}
 	
 	function api_error($message) {
-		return array('status' => 'ERROR', 'message' => $message, 'error' => true, 'OK' => false);
+		return array('status' => 'ERROR', 'message' => $message, 'error' => true, 'ERROR' => true, 'OK' => false);
 	}
 	
 	function api_success($values = null) {
 		if ($values == null) $values = array();
 		$values['status'] = 'OK';
 		$values['error'] = false;
+		$values['ERROR'] = false;
 		$values['OK'] = true;
 		$values['ok'] = true;
 		
