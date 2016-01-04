@@ -242,9 +242,19 @@
 	
 	$request = get_http_request();
 	
-	// overwrites suppress_skin to true, possibly
 	$file = process_url_mapping($request);
 	$log_not_found = $file == 'not_found.php'; // a little hacky.
+	if ($log_not_found) {
+		$legacy_url = sql_query_item("SELECT * FROM `legacy_article_url` WHERE `old_url` = '".sql_sanitize_string($request['path'])."' LIMIT 1");
+		if ($legacy_url != null) {
+			$redir_url = trim($legacy_url['new_url']);
+			header('HTTP/1.1 301 Moved Permanently');
+			header('Location: '.$redir_url);
+			exit;
+		}
+	}
+	
+	// overwrites suppress_skin to true, possibly
 	require 'php/' . $file;
 	
 	$response = execute($request);
