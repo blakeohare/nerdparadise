@@ -281,7 +281,7 @@
 		return $problem;
 	}
 	
-	function api_autograder_menu_get_problems($user_id, $type, $competition_id, $show_golf_scores) {
+	function api_autograder_menu_get_problems($user_id, $is_admin, $type, $competition_id, $show_golf_scores) {
 		$user_id = intval($user_id);
 		$language_id = intval($language_id);
 		if ($type != 'golf' && $type != 'practice' && $type != 'competition') return api_error("INVALID_TYPE");
@@ -293,15 +293,23 @@
 			$where = "`type` = '$type'";
 		}
 		
+		if ($type == 'golf') {
+			$order_by = "`golf_end_time` DESC";
+		} else {
+			$order_by = "`problem_id` DESC";
+		}
+		
 		$query = "
 			SELECT
 				`problem_id`,
 				`title`,
-				`metadata`
+				`metadata`,
+				`golf_start_time`,
+				`golf_end_time`
 			FROM `code_problems`
 			WHERE $where
 			ORDER BY
-				`problem_id` DESC";
+				$order_by ";
 		
 		$problems = sql_query($query);
 		

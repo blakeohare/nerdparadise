@@ -293,4 +293,70 @@
 		}
 		return implode("", $output);
 	}
+	
+	function unix_to_day($unix) {
+		return date("M j, Y", $unix);
+	}
+	
+	function unix_to_scaling_time($unix, $full_detail = false) {
+		$diff = (time() - $unix);
+		$is_future = $diff < 0;
+		$diff = abs($diff);
+		
+		if ($diff < 60) {
+			$output = $diff.' second'.($diff == 1 ? '' : 's');;
+			return $is_future ? $output : ($output.' ago');
+		} else if ($diff < 3600) {
+			$minutes = intval($diff / 60);
+			$output = $minutes.' minute'.($minutes == 1 ? '' : 's');
+			$seconds = $diff - $minutes * 60;
+			if ($seconds > 0) {
+				$output .= $seconds . ' second'.($seconds == 1 ? '' : 's');
+			}
+			return $is_future ? $output : ($output.' ago');
+		} else if ($diff < 3600 * 12) {
+			$hours = intval($diff / 3600);
+			$diff -= $hours * 3600;
+			$minutes = intval($diff / 60);
+			$output = $hours.' hour'.($hours == 1 ? '' : 's');
+			if ($minutes > 0) {
+				$output .= $minutes . ' minute'.($minutes == 1 ? '' : 's');
+			}
+			return $is_future ? $output : ($output.' ago');
+		} else if ($full_detail) {
+			return date("M j, Y g:i A", $unix);
+		} else {
+			return date("M j, Y", $unix);
+		}
+	}
+	
+	function seconds_to_duration($seconds) {
+		if ($seconds < 0) $seconds = 0;
+		$total = intval($seconds);
+		$minutes = intval($total / 60);
+		$seconds = $total - 60 * $minutes;
+		$hours = intval($minutes / 60);
+		$minutes -= $hours * 60;
+		$days = intval($hours / 24);
+		$hours -= $days * 24;
+		
+		$output = array();
+		$show = false;
+		if ($days > 0) {
+			array_push($output, $days.' day'.($days == 1 ? '' : 's'));
+			$show = true;
+		}
+		if ($show || $hours > 0) {
+			array_push($output, $hours.' hour'.($hours == 1 ? '' : 's'));
+			$show = true;
+		}
+		if ($show || $minutes > 0) {
+			array_push($output, $minutes.' minute'.($minutes == 1 ? '' : 's'));
+			$show = true;
+		}
+		if ($show || $seconds > 0) {
+			array_push($output, $seconds.' second'.($seconds == 1 ? '' : 's'));
+		}
+		return implode(', ', $output);
+	}
 ?>

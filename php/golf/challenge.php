@@ -7,6 +7,7 @@
 		
 		$output = array(
 			'<h1>',
+			'<a href="/golf">Code Golf</a> &gt; ',
 			htmlspecialchars($problem['title']),
 			'</h1>',
 			

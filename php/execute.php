@@ -230,6 +230,7 @@
 			'cookies' => $cookies,
 			'ip' => $ip,
 			'avatar' => $avatar,
+			'now' => time(),
 		);
 	}
 	
