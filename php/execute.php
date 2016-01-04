@@ -243,7 +243,9 @@
 	$request = get_http_request();
 	
 	// overwrites suppress_skin to true, possibly
-	require 'php/' . process_url_mapping($request);
+	$file = process_url_mapping($request);
+	$log_not_found = $file == 'not_found.php'; // a little hacky.
+	require 'php/' . $file;
 	
 	$response = execute($request);
 	
@@ -286,4 +288,16 @@
 			break;
 	}
 	
+	if ($log_not_found) {
+		$path = $request['path'];
+		if (strlen($path) > 200) $path = substr($path, 0, 200);
+		$tracker = sql_query_item("SELECT * FROM `not_found_tracker` WHERE `url` = '".sql_sanitize_string($path)."' LIMIT 1");
+		if ($tracker == null) {
+			sql_insert('not_found_tracker', array(
+				'url' => $path,
+				'hits' => 1));
+		} else {
+			sql_query("UPDATE `not_found_tracker` SET `hits` = `hits` + 1 WHERE `url` = '".sql_sanitize_string($path)."' LIMIT 1");
+		}
+	}
 ?>
