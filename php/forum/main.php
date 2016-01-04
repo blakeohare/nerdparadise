@@ -48,11 +48,18 @@
 				$category = $categories[$category_key];
 				array_push($output, '<div style="margin-top:10px;">');
 				
+				$threads = $category['thread_count'];
+				$posts = $category['post_count'];
+				array_push($output, '<div style="width:100px; float:right; color:#aaa; font-size:11px;">');
+				array_push($output, $threads.' thread'.($threads == 1 ? '' : 's').'<br />');
+				array_push($output, $posts.' post'.($posts == 1 ? '' : 's'));
+				array_push($output, '</div>');
+				
 				array_push($output, '<h3><a href="/forum/'.$category_key.'">');
 				array_push($output, htmlspecialchars($category['name']));
 				array_push($output, '</a></h3>');
 				
-				array_push($output, '<div>');
+				array_push($output, '<div style="width:400px;">');
 				array_push($output, htmlspecialchars($category['description']));
 				array_push($output, '</div>');
 				
@@ -67,7 +74,38 @@
 		
 		array_push($output, '<div style="float:left; width:340px;">');
 		array_push($output, '<div class="block">');
-		array_push($output, "TODO: recent posts.");
+		
+		array_push($output, '<h2>Recent Activity</h2>');
+		
+		$recent_threads = api_forum_get_recent_threads();
+		$user_info = $recent_threads['user_info'];
+		foreach ($recent_threads['threads'] as $thread_info) {
+			array_push($output, '<div style="margin-bottom:10px;">');
+			
+			$user = $user_info['user_'.$thread_info['user_id']];
+			
+			array_push($output, '<h3>');
+			array_push($output, '<a href="/forum/'.$thread_info['category_key'].'/'.$thread_info['thread_id'].'/new">');
+			array_push($output, htmlspecialchars($thread_info['title']));
+			array_push($output, '</a>');
+			array_push($output, '</h3>');
+			
+			array_push($output, '<div style="color:#888; font-style:italic;">');
+			array_push($output, "Lorem ipsum dolar sit amet...");
+			array_push($output, '</div>');
+			
+			array_push($output, '<div>');
+			array_push($output, 'by <a href="/profiles/'.$user['login_id'].'">');
+			array_push($output, htmlspecialchars($user['name']));
+			array_push($output, '</a>');
+			array_push($output, ' in <a href="/forum/'.$thread_info['category_key'].'">');
+			array_push($output, htmlspecialchars($thread_info['category_name']));
+			array_push($output, '</a>');
+			array_push($output, '</div>');
+			
+			array_push($output, '</div>');
+		}
+		
 		array_push($output, '</div>');
 		array_push($output, '</div>');
 		

@@ -130,7 +130,9 @@
 				`pass_hash`,
 				`time_last_online`,
 				`ip_last`,
-				`flags`
+				`flags`,
+				`image_id`,
+				`image_dim`
 			FROM `users`
 			WHERE $where_clause
 			LIMIT 1");
@@ -150,6 +152,17 @@
 					case 'L': $is_legacy_password = true; break;
 					default: break;
 				}
+			}
+			
+			// TODO: use canonicalize_user_db_entry
+			if (strlen($output['image_id']) > 0) {
+				$dim = explode('|', $output['image_dim']);
+				$output['avatar'] = array(
+					'path' => $output['image_id'],
+					'width' => intval($dim[0]),
+					'height' => intval($dim[1]));
+			} else {
+				$output['avatar'] = null;
 			}
 			
 			$output['is_admin'] = $is_admin;
@@ -305,6 +318,18 @@
 			}
 		}
 		
+		if (strlen($user_info['image_id']) > 0) {
+			$dim = explode('|', $user_info['image_dim']);
+			$user_info['avatar'] = array(
+				'path' => $user_info['image_id'],
+				'width' => intval($dim[0]),
+				'height' => intval($dim[1]));
+		} else {
+			$user_info['avatar'] = null;
+		}
+		
+		
+		
 		$user_info['is_admin'] = $is_admin;
 		$user_info['online_now'] = $online_now;
 		return $user_info;
@@ -318,7 +343,7 @@
 		if (count($user_ids) > 0) {
 			$user_infos = sql_query("
 				SELECT
-					`user_id`,`login_id`,`name`,`flags`,`image_id`,`time_last_online`,`post_count`
+					`user_id`,`login_id`,`name`,`flags`,`image_id`,`image_dim`,`time_last_online`,`post_count`
 				FROM `users`
 				WHERE `user_id` IN (".implode(', ', $user_ids).")");
 			for ($i = 0; $i < $user_infos->num_rows; ++$i) {

@@ -63,14 +63,43 @@
 			
 			'</div>',
 			
-			'<div class="main_nav">',
+			'<div class="main_nav">');
 			
-			'<div style="float:right; width:300px; text-align:right; padding:8px;">',
-			$request['user_id'] == 0
-				? '<a href="/login">Log In</a> | <a href="/register">Register</a>'
-				: 'Logged in as <a href="/profiles/'.$request['login_id'].'">'.htmlspecialchars($request['name']).'</a> | <a href="/logout">Log Out</a>',
-			'</div>',
+		array_push($output,
+			'<div style="float:right; width:400px; text-align:right; padding:8px;">');
+		if ($request['user_id'] == 0) {
+			array_push($output, '<a href="/login">Log In</a> | <a href="/register">Register</a>');
+		} else {
+			array_push($output,
+				'Logged in as <a href="/profiles/'.$request['login_id'].'">'.
+				htmlspecialchars($request['name']).'</a> | ',
+				'<a href="/account">Account Settings</a> | ',
+				'<a href="/logout">Log Out</a>');
 			
+			$avatar = '';
+			if ($request['avatar'] != null) {
+				$width = $request['avatar']['width'];
+				$height = $request['avatar']['height'];
+				if ($width > 0 && $height > 0) {
+					$ratio = 1.0 * $width / $height;
+					if ($width == $height) {
+						$width = 25;
+						$height = 25;
+					} else if ($width > $height) {
+						$height = intval($height * 25 / $width);
+						$width = 25;
+					} else {
+						$width = intval($width * 25 / $height);
+						$height = 25;
+					}
+					$avatar = ' <img style="margin-left:30px;" src="/uploads/avatars/'.$request['avatar']['path'].'" valign="middle" width="'.$width.'" height="'.$height.'" />';
+					array_push($output, $avatar);
+				}
+			}
+		}
+		array_push($output, '</div>');
+		
+		array_push($output,
 			
 			'<table>',
 				'<!-- Haters gonna hate -->',

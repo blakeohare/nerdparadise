@@ -389,4 +389,36 @@
 		}
 		return api_account_fetch_mini_profiles($user_ids);
 	}
+	
+	function api_forum_get_recent_threads() {
+		$threads = sql_query("
+			SELECT
+				th.*,
+				p.`user_id`,
+				c.`key` AS 'category_key',
+				c.`name` AS 'category_name'
+			FROM `forum_threads` th
+			INNER JOIN `forum_posts` p ON (p.`post_id` = th.`last_post_id`)
+			INNER JOIN `forum_categories` c ON (c.`category_id` = th.`category_id`)
+			WHERE c.`show_in_recent` = 1
+			ORDER BY th.`last_post_id` DESC
+			LIMIT 25");
+			
+		$thread_infos = array();
+		$user_ids = array();
+		for ($i = 0; $i < $threads->num_rows; ++$i) {
+			$thread_info = api_forum_canonicalize_thread_db_entry($threads->fetch_assoc());
+			if ($thread_info['is_admin_viewable']) {
+				continue;
+			}
+			array_push($thread_infos, $thread_info);
+			array_push($user_ids, $thread_info['user_id']);
+		}
+		
+		$user_info = api_account_fetch_mini_profiles($user_ids);
+		
+		return array(
+			'threads' => $thread_infos,
+			'user_info' => $user_info);
+	}
 ?>

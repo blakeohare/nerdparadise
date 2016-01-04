@@ -20,6 +20,7 @@
 			case '/': return 'page_main.php';
 			case '/login': return 'page_login.php';
 			case '/logout': return 'page_logout.php';
+			case '/account': return 'account_settings.php';
 			case '/register': return 'register.php';
 			case '/secretdebug': return 'secret_debug.php';
 			case '/contact': return 'page_contact.php';
@@ -162,7 +163,7 @@
 						$file_info['type'] == 'GIF') {
 						$file_info['is_image'] = true;
 						$dim = @getimagesize($file_info['path']);
-						if (is_array($dim) && count($dim) == 2) {
+						if (is_array($dim) && count($dim) >= 2) {
 							$file_info['image_width'] = $dim[0];
 							$file_info['image_height'] = $dim[1];
 						}
@@ -202,6 +203,7 @@
 			$is_admin = $user_info['is_admin'];
 			$login_id = $user_info['login_id'];
 			$name = $user_info['name'];
+			$avatar = $user_info['avatar'];
 		}
 		
 		if ($is_logout) {
@@ -227,6 +229,7 @@
 			'files' => $files,
 			'cookies' => $cookies,
 			'ip' => $ip,
+			'avatar' => $avatar,
 		);
 	}
 	
