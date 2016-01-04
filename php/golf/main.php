@@ -1,8 +1,5 @@
 <?
 	function execute($request) {
-		$languages = api_autograder_get_language_infos(true);
-		$problems_and_scores = api_autograder_menu_get_problems($request['user_id'], $request['is_admin'], 'golf', 0, true);
-		$ordered_problem_ids = $problems_and_scores['ordered_problem_ids'];
 		$output = array('<h1>Code Golf</h1>',
 			"<p><a href=\"https://en.wikipedia.org/wiki/Code_golf\">Code Golf</a> is a competition to see who can solve a programming problem using the fewest [key] \"strokes\".</p>",
 			'</div>');
@@ -42,6 +39,71 @@
 				'<h2>Current Challenge: <a href="/golf/'.$current_challenge['problem_id'].'">'.htmlspecialchars($current_challenge['title']).'</a></h2>',
 				'<div><span style="color:#048; font-weight:bold;">'.seconds_to_duration($current_challenge['golf_end_time'] - time()).'</span> Remain.</div>',
 				'');
+			// TODO: migrate to api
+			$ranked_entries = sql_query("
+				SELECT
+					r.`user_id`,
+					r.`integer_rank`,
+					r.`code_size`,
+					r.`language_id`,
+					lang.`name` AS 'lang_name',
+					lang.`key` AS 'lang_key'
+				FROM `code_solutions` r
+				INNER JOIN `languages` lang ON (lang.`language_id` = r.`language_id`)
+				WHERE
+					r.`problem_id` = ".$current_challenge['problem_id']." AND
+					r.`integer_rank` <= 3
+				ORDER BY r.`integer_rank`");
+			
+			if ($ranked_entries->num_rows == 0) {
+				array_push($output,
+					'<p>Currently there are no submissions.</p>',
+					'<p><a href="/golf/'.$current_challenge['problem_id'].'">Be the first!</a></p>');
+			} else {
+				
+				array_push($output, '<h2 style="padding-top:20px; padding-bottom:10px;">Rankings</h2>');
+				
+				$user_ids = array();
+				$languages = array();
+				$language_keys = array();
+				$language_names = array();
+				for ($i = 0; $i < $ranked_entries->num_rows; ++$i) {
+					$entry = $ranked_entries->fetch_assoc();
+					array_push($user_ids, $entry['user_id']);
+					$language_key = $entry['lang_key'];
+					if (!isset($languages[$language_key])) {
+						$languages[$language_key] = array();
+						array_push($language_keys, $language_key);
+						$language_names[$language_key] = $entry['lang_name'];
+					}
+					array_push($languages[$language_key], $entry);
+				}
+				sort($language_keys);
+				
+				$user_infos = api_account_fetch_mini_profiles($user_ids);
+				
+				foreach ($language_keys as $language_key) {
+					array_push($output, 
+						'<h3>',
+						'<img src="/images/languages/'.$language_key.'_small.png" valign="middle" />',
+						htmlspecialchars($language_names[$language_key]),
+						'</h3>',
+						
+						'<table style="width:100%">');
+					$rank = 1;
+					foreach ($languages[$language_key] as $entry) {
+						$user_info = $user_infos['user_'.$entry['user_id']];
+						array_push($output,
+							'<tr>',
+							'<td>#'.$rank.'</td>',
+							'<td><a href="/profiles/'.$user_info['login_id'].'">'.htmlspecialchars($user_info['name']).'</a></td>',
+							'<td>'.$entry['code_size'].' byte'.($entry['code_size'] == 1 ? '' : 's').'</td>',
+							'</tr>');
+						++$rank;
+					}
+					array_push($output, '</table>');
+				}
+			}
 		}
 		array_push($output, 
 			
@@ -55,6 +117,9 @@
 			'<div class="fullblock">',
 			'<h2>All Challenges</h2>');
 		
+		$languages = api_autograder_get_language_infos(true);
+		$problems_and_scores = api_autograder_menu_get_problems($request['user_id'], $request['is_admin'], 'golf', 0, true);
+		$ordered_problem_ids = $problems_and_scores['ordered_problem_ids'];
 		
 		array_push($output, '<table cellspacing="0" cellpadding="4"><tr style="font-size:14px; font-weight:bold;"><td></td><td></td>');
 		foreach ($languages as $language) {
