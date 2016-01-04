@@ -94,7 +94,8 @@
 				$score = $problems_and_scores['score_'.$problem_id.'_'.$language['language_id']];
 				if (intval($score['code_size']) > 0) {
 					array_push($output, '<td>');
-					array_push($output, $score['code_size']); // TODO: some sort of indication of your rank, which is probably more interesting
+					array_push($output, $score['code_size']);
+					array_push($output, ' (#'.$score['integer_rank'].')'); // TODO: little trophy images.
 				} else {
 					array_push($output, '<td style="color:#888;">');
 					array_push($output, 'N/A');

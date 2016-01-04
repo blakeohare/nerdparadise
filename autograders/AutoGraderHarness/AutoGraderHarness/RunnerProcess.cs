@@ -245,6 +245,8 @@ namespace AutoGraderHarness
 			});
 
 			request.Send();
+
+			string response = request.ResponseBody;
 		}
 	}
 }

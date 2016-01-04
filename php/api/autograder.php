@@ -270,7 +270,111 @@
 			WHERE `item_id` = $item_id
 			LIMIT 1");
 		
+		if ($item['user_id'] > 0 && strpos($callback, 'GOLF:') === 0) {
+			$parts = explode(',', trim($output));
+			if (count($parts) == 4 && trim($parts[0]) == 'SCORE') {
+				$problems = intval($parts[1]);
+				$correct = intval($parts[2]);
+				$wrong = intval($parts[3]);
+				if ($problems > 0 && $correct + $wrong == $problems) {
+					if ($wrong == 0) {
+						// successful entry.
+						api_autograder_report_golf_success($item);
+					}
+				}
+			}
+		}
+		
 		return api_success();
+	}
+	
+	function api_autograder_report_golf_success($autograder_item) {
+		$code = trim($autograder_item['code']);
+		$user_id = $autograder_item['user_id'];
+		$code_length = strlen($code);
+		$language_id = intval($autograder_item['language_id']);
+		$time_created = intval($autograder_item['time_created']);
+		$problem_id = intval($autograder_item['problem_id']);
+		$problem = api_autograder_canonicalize_problem(sql_query_item("SELECT * FROM `code_problems` WHERE `problem_id` = $problem_id LIMIT 1"));
+		if ($problem != null && $problem['type'] == 'golf' && $language_id > 0) {
+			$now = time();
+			if ($now >= $problem['golf_start_time'] && $now < $problem['golf_end_time']) {
+				$existing_entries = array();
+				$existing_entries_raw = sql_query("SELECT * FROM `code_solutions` WHERE `language_id` = $language_id AND `problem_id` = $problem_id ORDER BY `relative_float_rank`");
+				$your_entry = null;
+				for ($i = 0; $i < $existing_entries_raw->num_rows; ++$i) {
+					$existing_entry_raw = $existing_entries_raw->fetch_assoc();
+					if ($existing_entry_raw['user_id'] == $user_id) {
+						$your_entry = $existing_entry_raw;
+						if ($your_entry['code_size'] < $code_length) return; // you did better before.
+					} else {
+						array_push($existing_entries, $existing_entry_raw);
+					}
+				}
+				
+				$length = count($existing_entries);
+				if (count($existing_entries) == 0) {
+					$new_rank = 1000.0;
+				} else if ($code_length < $existing_entries[0]['code_size']) {
+					$new_rank = $existing_entries[0]['relative_float_rank'] * .5;
+				} else if ($code_length >= $existing_entries[$length - 1]['code_size']) {
+					$new_rank = $existing_entries[$length - 1]['relative_float_rank'] + 1000.0;
+				} else {
+					for ($i = 1; $i < $length; ++$i) {
+						$left = $existing_entries[$i - 1];
+						$right = $existing_entries[$i];
+						if ($left['code_size'] <= $code_length && $right['code_size'] > $code_length) {
+							$new_rank = ($left['relative_float_rank'] + $right['relative_float_rank']) / 2.0;
+							break;
+						}
+					}
+				}
+				
+				if ($your_entry == null) {
+					sql_insert('code_solutions', array(
+						'problem_id' => $problem_id,
+						'user_id' => $user_id,
+						'language_id' => $language_id,
+						'relative_float_rank' => $new_rank,
+						'integer_rank' => -1,
+						'code' => $code,
+						'solve_time' => $now,
+						'code_size' => $code_length));
+				} else {
+					sql_query("
+						UPDATE `code_solutions`
+						SET
+							`code` = '".sql_sanitize_string($code)."',
+							`code_size` = $code_length,
+							`relative_float_rank` = $new_rank,
+							`solve_time` = $now
+						WHERE
+							`problem_id` = $problem_id AND
+							`user_id` = $user_id AND
+							`language_id` = $language_id
+						LIMIT 1");
+				}
+				
+				$reranker = sql_query("
+					SELECT
+						`solution_id`,`integer_rank`
+					FROM `code_solutions`
+					WHERE
+						`problem_id` = $problem_id AND
+						`language_id` = $language_id
+					ORDER BY
+						`relative_float_rank`
+					");
+				
+				for ($i = 1; $i <= $reranker->num_rows; ++$i) {
+					$row = $reranker->fetch_assoc();
+					if ($i != $row['integer_rank']) {
+						$solution_id = intval($row['solution_id']);
+						sql_query("UPDATE `code_solutions` SET `integer_rank` = $i WHERE `solution_id` = $solution_id LIMIT 1");
+					}
+				}
+			}
+		}
 	}
 	
 	function api_autograder_menu_get_problem($user_id, $type, $competition_id, $problem_id) {
@@ -329,7 +433,7 @@
 		}
 		
 		if ($show_golf_scores && count($ordered_problem_ids) > 0 && $user_id > 0) {
-			$scores = sql_query("SELECT `problem_id`,`language_id`,`code_size` FROM `code_solutions` WHERE `user_id` = ".$user_id." AND `problem_id` IN (".implode(', ', $ordered_problem_ids).")");
+			$scores = sql_query("SELECT `problem_id`,`language_id`,`code_size`,`integer_rank` FROM `code_solutions` WHERE `user_id` = ".$user_id." AND `problem_id` IN (".implode(', ', $ordered_problem_ids).")");
 			for ($i = 0; $i < $scores->num_rows; ++$i) {
 				$score = $scores->fetch_assoc();
 				$output['score_'.$score['problem_id'].'_'.$score['language_id']] = $score;
