@@ -79,6 +79,9 @@ namespace AutoGraderHarness
 								case "crayon":
 									this.RunCrayonCode(token, code, callback, testFunctionName, expectedArgCount, testInput, expectedOutput, returnType, argTypes, feature);
 									break;
+								case "python":
+									this.RunPythonCode(token, code, callback, testFunctionName, expectedArgCount, testInput, expectedOutput, returnType, argTypes, feature);
+									break;
 								default:
 									break;
 							}
@@ -101,6 +104,124 @@ namespace AutoGraderHarness
 						}
 					}
 				}
+			}
+		}
+
+		private void RunPythonCode(string token, string code, string callback, string testFunctionName, string rawArgCountValue, List<object> testInputList, List<object> testOutputList, string returnType, string[] argTypes, string feature)
+		{
+			bool runTests = feature != "tinker";
+
+			string secretStartToken = Util.GetGibberishString();
+			string caseIteratorVar = Util.GetGibberishString();
+			string inputListVar = Util.GetGibberishString();
+			string outputListVar = Util.GetGibberishString();
+			string succeedToken = Util.GetGibberishString();
+			string failToken = Util.GetGibberishString();
+			string functionDefinedCorrectlyToken = Util.GetGibberishString();
+			string actualOutputVar = Util.GetGibberishString();
+			string ranCorrectlyVar = Util.GetGibberishString();
+			string answerCorrectVar = Util.GetGibberishString();
+			string answerWrongVar = Util.GetGibberishString();
+			string finishedToken = Util.GetGibberishString();
+			string dummyVar = Util.GetGibberishString();
+
+			PythonGrader grader = new PythonGrader(code);
+
+			if (runTests)
+			{
+				int argCount;
+				if (!int.TryParse(rawArgCountValue, out argCount))
+				{
+					this.ReportStatus(token, GraderState.ERROR_UNKNOWN);
+					return;
+				}
+
+				string invocation = testFunctionName + "(";
+				if (argCount == 0)
+				{
+					invocation += ")";
+				}
+				else if (argCount == 1)
+				{
+					invocation += inputListVar + "[" + caseIteratorVar + "])";
+				}
+				else
+				{
+					for (int i = 0; i < argCount; ++i)
+					{
+						if (i > 0) invocation += ", ";
+						invocation += inputListVar + "[" + caseIteratorVar + "][" + i + "]";
+					}
+					invocation += ")";
+				}
+
+				code += string.Join("\n", new string[] {
+					"\n",
+					"print('" + secretStartToken + "')",
+					dummyVar + " = " + testFunctionName,
+					"print('" + functionDefinedCorrectlyToken + "')",
+					inputListVar + " = " + grader.ConvertJsonToCode(testInputList),
+					outputListVar + " = " + grader.ConvertJsonToCode(testOutputList),
+					"\n",
+					"for " + caseIteratorVar + " in range(len(" + inputListVar + ")):",
+					
+					"  " + actualOutputVar + " = " + invocation,
+					"  print('" + ranCorrectlyVar + "');",
+					"  if " + actualOutputVar + " == " + outputListVar + "[" + caseIteratorVar + "]:",
+					"    print('" + answerCorrectVar + "')",
+					"  else:",
+					"    print('" + answerWrongVar + "')",
+					"print('" + finishedToken + "')",
+					"",
+				});
+			}
+
+			grader = new PythonGrader(code);
+
+			grader.SetUp();
+
+			// TODO: refactor this. It's identical to the Crayon version.
+			if (grader.State == GraderState.SETTING_UP)
+			{
+				grader.State = GraderState.RUNNING;
+				this.ReportStatus(token, grader.State);
+				string output = grader.Run();
+				if (runTests)
+				{
+					int startToken = output.IndexOf(secretStartToken);
+					if (startToken == -1)
+					{
+						this.ReportStatus(token, GraderState.ERROR_RUNTIME);
+					}
+					else
+					{
+						string gradesheet = output.Substring(startToken);
+						if (!gradesheet.Contains(functionDefinedCorrectlyToken))
+						{
+							this.ReportStatus(token, GraderState.ERROR_REQUIRED_FUNCTION_NOT_DEFINED);
+						}
+						else if (!gradesheet.Contains(finishedToken))
+						{
+							this.ReportStatus(token, GraderState.ERROR_RUNTIME);
+						}
+						else
+						{
+							int runs = gradesheet.Split(new string[] { ranCorrectlyVar }, StringSplitOptions.None).Length - 1;
+							int passes = gradesheet.Split(new string[] { answerCorrectVar }, StringSplitOptions.None).Length - 1;
+							int fails = gradesheet.Split(new string[] { answerWrongVar }, StringSplitOptions.None).Length - 1;
+
+							this.ReportConclusion(token, "SCORE," + runs + "," + passes + "," + fails, callback);
+						}
+					}
+				}
+				else
+				{
+					this.ReportConclusion(token, output, callback);
+				}
+			}
+			else
+			{
+				this.ReportStatus(token, grader.State);
 			}
 		}
 

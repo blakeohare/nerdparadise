@@ -48,6 +48,7 @@
     <Compile Include="GraderState.cs" />
     <Compile Include="Graders\AbstractGrader.cs" />
     <Compile Include="Graders\CrayonGrader.cs" />
+    <Compile Include="Graders\PythonGrader.cs" />
     <Compile Include="HttpRequest.cs" />
     <Compile Include="JsonParser.cs" />
     <Compile Include="Program.cs" />
