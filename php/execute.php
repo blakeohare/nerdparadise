@@ -28,10 +28,16 @@
 			case '/about': return 'page_about.php';
 			default:
 				switch ($root) {
+					case 'profiles':
+						if (count($parts) == 2) {
+							return 'profile.php';
+						}
+						return 'not_found.php';
+						
 					case 'autograder':
 						if ($parts[1] == 'graderpoll') return 'autograder/grader_poll.php';
 						if ($parts[1] == 'run') return 'autograder/client_poll.php';
-						return "not_found.php";
+						return 'not_found.php';
 						
 					case 'tinker':
 						if ($length == 1) return "tinker/main.php";
