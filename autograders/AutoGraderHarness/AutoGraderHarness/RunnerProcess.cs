@@ -9,7 +9,6 @@ namespace AutoGraderHarness
 	class RunnerProcess
 	{
 		private WorkQueue queue;
-		private int label;
 		public RunnerProcess(WorkQueue queue)
 		{
 			this.queue = queue;
@@ -186,7 +185,11 @@ namespace AutoGraderHarness
 				grader.State = GraderState.RUNNING;
 				this.ReportStatus(token, grader.State);
 				string output = grader.Run();
-				if (runTests)
+				if (output == null)
+				{
+					this.ReportStatus(token, GraderState.ERROR_TIMED_OUT);
+				}
+				else if (runTests)
 				{
 					int startToken = output.IndexOf(secretStartToken);
 					if (startToken == -1)
@@ -304,7 +307,11 @@ namespace AutoGraderHarness
 				grader.State = GraderState.RUNNING;
 				this.ReportStatus(token, grader.State);
 				string output = grader.Run();
-				if (runTests)
+				if (grader.State == GraderState.ERROR_TIMED_OUT || grader.State == GraderState.ERROR_MEMORY_EXCEEDED)
+				{
+					this.ReportStatus(token, grader.State);
+				}
+				else if (runTests)
 				{
 					int startToken = output.IndexOf(secretStartToken);
 					if (startToken == -1)

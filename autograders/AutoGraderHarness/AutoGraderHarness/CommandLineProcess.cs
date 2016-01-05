@@ -14,21 +14,32 @@ namespace AutoGraderHarness
 			string file = parts[0];
 			string args = command.Substring(file.Length + 1);
 
+			List<string> errorOutput = new List<string>();
+			List<string> stdOutput = new List<string>();
+
+			ProcessStartInfo pstartInfo = new ProcessStartInfo(file, args);
+			pstartInfo.ErrorDialog = false;
+			pstartInfo.UseShellExecute = false;
+			pstartInfo.RedirectStandardError = true;
+			pstartInfo.RedirectStandardOutput = true;
+			pstartInfo.WorkingDirectory = workingDirectory;
 			Process p = new Process();
-			p.StartInfo.UseShellExecute = false;
-			p.StartInfo.RedirectStandardOutput = true;
-			p.StartInfo.RedirectStandardError = true;
-			p.StartInfo.WorkingDirectory = workingDirectory;
-
-			p.StartInfo.FileName = file;
-			p.StartInfo.Arguments = args;
+			p.StartInfo = pstartInfo;
+			p.ErrorDataReceived += (sender, err) => { if (err.Data != null) errorOutput.Add(err.Data); };
+			p.OutputDataReceived += (sender, text) => { if (text.Data != null) stdOutput.Add(text.Data); };
 			p.Start();
+			p.BeginErrorReadLine();
+			p.BeginOutputReadLine();
 
-			string output = p.StandardOutput.ReadToEnd();
-			output += p.StandardError.ReadToEnd();
-			p.WaitForExit();
-			
-			return output.TrimEnd().Replace("\r\n", "\n");
+			if (!p.WaitForExit(10 * 1000))
+			{
+				p.Kill();
+				return null;
+			}
+
+			string output = string.Join("\n", stdOutput.Concat<string>(errorOutput)).Replace("\r\n", "\n");
+
+			return output;
 		}
 	}
 }

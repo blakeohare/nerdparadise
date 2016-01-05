@@ -55,6 +55,13 @@ namespace AutoGraderHarness.Graders
 
 			string output = CommandLineProcess.Run(this.WorkingDirectory, @"C:\Python34\python banned_code_check.py");
 
+			if (output.Contains("SyntaxError: invalid syntax") || output.Contains("File \"run_me.py\","))
+			{
+				this.State = GraderState.ERROR_COMPILE;
+				return;
+			}
+
+
 			foreach (string bannedItem in new string[] { 
 				"IMPORT_NAME",
 			})
@@ -110,7 +117,26 @@ namespace AutoGraderHarness.Graders
 		public string Run()
 		{
 			Util.CreateFile(this.WorkingDirectory + "\\run_me.py", this.Code);
-			return CommandLineProcess.Run(this.WorkingDirectory, @"C:\Python34\python run_me.py");
+			string output = CommandLineProcess.Run(this.WorkingDirectory, @"C:\Python34\python run_me.py");
+
+			if (output == null)
+			{
+				this.State = GraderState.ERROR_TIMED_OUT;
+				return null;
+			}
+
+			if (output.Contains("Traceback (most recent call last)") && output.Contains("MemoryError"))
+			{
+				this.State = GraderState.ERROR_MEMORY_EXCEEDED;
+				return null;
+			}
+
+			if (output.Contains("SyntaxError: invalid syntax"))
+			{
+				this.State = GraderState.ERROR_COMPILE;
+			}
+
+			return output;
 		}
 
 		// TODO: refactor this as well.

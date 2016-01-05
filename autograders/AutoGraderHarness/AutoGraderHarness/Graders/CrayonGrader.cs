@@ -28,11 +28,20 @@ namespace AutoGraderHarness.Graders
 			this.State = GraderState.RUNNING;
 
 			string output = CommandLineProcess.Run(System.IO.Path.Combine(this.WorkingDirectory, "output", "python"), "python game.py");
-
-			if (output.Contains("start.cry, Line:"))
+			if (output == null)
+			{
+				this.State = GraderState.ERROR_TIMED_OUT;
+				return null;
+			}
+			else if (output.Contains("start.cry, Line:"))
 			{
 				this.State = GraderState.ERROR_RUNTIME;
 				return output;
+			}
+			else if (output.Contains("Traceback (most recent call last)") && output.Contains("MemoryError"))
+			{
+				this.State = GraderState.ERROR_MEMORY_EXCEEDED;
+				return null;
 			}
 			else
 			{
@@ -76,7 +85,10 @@ namespace AutoGraderHarness.Graders
 				"</build>"));
 			Util.CreateFile(this.WorkingDirectory + "/source/start.cry", this.Code);
 
-			string output = CommandLineProcess.Run(this.WorkingDirectory, "crayon " + this.WorkingDirectory + "\\UserCode.build -target python");
+			string output = CommandLineProcess.Run(
+				this.WorkingDirectory, 
+				"crayon " + this.WorkingDirectory + "\\UserCode.build -target python");
+
 			if (output.Length > 0)
 			{
 				this.State = GraderState.ERROR_COMPILE;
