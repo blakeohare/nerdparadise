@@ -312,7 +312,7 @@
 			$output = $minutes.' minute'.($minutes == 1 ? '' : 's');
 			$seconds = $diff - $minutes * 60;
 			if ($seconds > 0) {
-				$output .= $seconds . ' second'.($seconds == 1 ? '' : 's');
+				$output .= ' '.$seconds . ' second'.($seconds == 1 ? '' : 's');
 			}
 			return $is_future ? $output : ($output.' ago');
 		} else if ($diff < 3600 * 12) {
@@ -321,7 +321,7 @@
 			$minutes = intval($diff / 60);
 			$output = $hours.' hour'.($hours == 1 ? '' : 's');
 			if ($minutes > 0) {
-				$output .= $minutes . ' minute'.($minutes == 1 ? '' : 's');
+				$output .= ' '.$minutes . ' minute'.($minutes == 1 ? '' : 's');
 			}
 			return $is_future ? $output : ($output.' ago');
 		} else if ($full_detail) {
