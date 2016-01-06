@@ -371,7 +371,7 @@
 		if ($thread_info == null) return null;
 		if ($fetch_category_info_too) {
 			$category_id = $thread_info['category_id'];
-			$category_info = api_forum_get_category_info($category_id);
+			$category_info = api_forum_get_category_info($user_id, $is_admin, $category_id, false);
 			if (!$is_admin && $category_info['is_admin_visible']) {
 				return null;
 			}

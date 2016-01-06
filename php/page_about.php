@@ -31,7 +31,7 @@
 			
 			array(
 				"The autograder is down/unresponsive.", 'autograder',
-				"That's not a question. The auto-grader is a sandboxed program that I am running on a dedicated machine in my apartment on my personal internet connection. It'll happen from time to time."),
+				"The auto-grader is a sandboxed program that I am running on a dedicated machine in my apartment on my personal internet connection. It'll happen from time to time."),
 			
 			array(
 				"What the hell is Crayon and why is it everywhere?", 'crayon',
