@@ -1,7 +1,8 @@
 <?
 	function generate_header($title, $request, $js, $css, $onload) {
 		$css = array_merge(array('styles.css'), $css);
-		$js = array_merge(array('common.js'), $js);
+		$js = array_merge(array('common.js', 'conway.js'), $js);
+		$onload = array_merge(array('conway_init()'), $onload);
 		$css_html = array();
 		$js_html = array();
 		foreach ($css as $css_item) {
@@ -45,16 +46,24 @@
 			'  body { background-color:#111; font-size:12px; text-align:justify; }',
 			'  a:link, a:visited { text-decoration:none; color:#04f; }',
 			'  a:hover { text-decoration:underline; color:#28d;  }',
-			'  .main_nav { background-color:#282828; color:#ddd; font-size:11px; }',
+			'  .main_nav { color:#ddd; font-size:11px; }',
 			'  .main_nav a:link, .main_nav a:visited { font-weight: bold; text-decoration:none; color:#fff; }',
-			'  .main_nav a:hover { font-weight: bold; text-decoration:underline; color:#ccc;  }',
+			'  .main_nav a:hover { font-weight: bold; text-decoration:underline; color:#ccc; }',
 			'  .main_nav td { padding:8px; padding-right:70px;}',
 			'  .fullblock { width:920px; background-color:#fff; padding:20px; }',
 			'  .block { background-color:#fff; padding:20px; }',
-			
 			' </style>',
+			
 			'</head>',
 			'<body'.(count($onload) == 0 ? '' : ' onload="'.implode(';', $onload).'"').'>',
+			
+			'<div id="top_host" style="height:160px;position:relative; background-color:#000;">',
+			
+			'<div id="top_canvas_host" style="position:absolute;width:100%;height:160px;">',
+				'<canvas id="conways_game_of_life" style="width:100%;height:160px;" />',
+			'</div>',
+			
+			'<div id="top_content_host" style="position:absolute;width:100%;height:160px;">',
 			'<div style="color:#fff; height:60px;">',
 			
 			'<div class="hfont" style="font-size:48px;">',
@@ -120,7 +129,9 @@
 					'<td><a href="/jams">Game Jams</a></td>',
 				'</tr>',
 			'</table>',
-			'</div>',
+			'</div>', // main_nav
+			'</div>', // top_content_host
+			'</div>', // top_host
 			
 			'<div style="clear:both; background-color:#eee;">',
 			
