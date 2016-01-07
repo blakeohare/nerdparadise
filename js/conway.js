@@ -19,10 +19,6 @@ function conway_update() {
 	var cc = conway_context;
 	if (!cc.enabled) return;
 	
-	if (cc.pixel_queue.length == 0) {
-		console.log(cc.pixel_queue);
-	}
-	
 	var canvas_w = cc.canvas_host.offsetWidth;
 	var canvas_h = cc.canvas_host.offsetHeight;
 	var tw = cc.tile_width;
@@ -216,10 +212,13 @@ function conway_mousemove(ev) {
 		var y = Math.floor(pt[1] - cc.tile_width / 2);
 		var tw = cc.tile_width;
 		
-		cc.pixel_queue.push([x, y]);
-		cc.pixel_queue.push([x + tw, y]);
-		cc.pixel_queue.push([x, y + tw]);
-		cc.pixel_queue.push([x + tw, y + tw]);
+		for (var dx = -1; dx <= 1; ++dx) {
+			for (var dy = -1; dy <= 1; ++dy) {
+				if (Math.random() < .5) {
+					cc.pixel_queue.push([x + tw * dx, y + tw * dy]);
+				}
+			}
+		}
 		
 		if (!cc.is_running) {
 			cc.is_running = true;
